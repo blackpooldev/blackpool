@@ -22,6 +22,27 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "lower-bnb-minimum", date: "Nov 3, 2026", kind: "Improvement", areas: ["shield", "bridge", "cli"],
+    pill: "BNB minimum deposit is now 0.01 BNB",
+    title: "Lower BNB minimum, steadier network switching",
+    lead: "Shielding into the BNB pool now starts at 0.01 BNB, and switching networks no longer gets stuck.",
+    bullets: [
+      "The minimum deposit for the BNB pool is 0.01 BNB, down from 0.02. The withdraw fee at the minimum is about 10%; the other pools are unchanged.",
+      "The network button asks the wallet directly and reads its real network afterwards, so it no longer stays on \"Switching...\" with wallets that skip the network-change event. A cancelled or unanswered switch shows a short note.",
+      "The running step in the progress window has a new animation, and a delivered bridge is shown once, in the Recent bridges card.",
+      "CLI 0.4.1 applies the same BNB minimum.",
+    ],
+    primary: { href: "/app", text: "Open the app" }, docs: "/docs#fees",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">BNB pool<span>BNB Chain</span></div>
+        <div className="cl-row"><span>Minimum deposit</span><span className="cl-pill ok">0.01 BNB</span></div>
+        <div className="cl-row"><span>Withdraw fee</span><span className="cl-pill pend">0.001 + 0.35%</span></div>
+        <div className="cl-row"><span>Network switch</span><span className="cl-pill ok">no more stuck</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "safe-admin", date: "Nov 3, 2026", kind: "Improvement", areas: ["shield", "send", "swap", "bridge"],
     pill: "Pool admin is now a 2-of-3 multisig",
     title: "Pools controlled by a multisig",
