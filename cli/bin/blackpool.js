@@ -333,7 +333,7 @@ const CHAINS = {
     nativePool: 'eth',
     // pool key -> { symbol, decimals, native, minDeposit }. minDeposit mirrors the frontend
     // POOL_META floor and must stay in step with it: every stablecoin pool is a flat 3 units (~$3)
-    // for a uniform entry point across chains, native pools are 0.001 ETH / 0.02 BNB. These are an
+    // for a uniform entry point across chains, native pools are 0.001 ETH / 0.01 BNB. These are an
     // operator choice, not a fee-ratio rule -- see the note in frontend POOL_META for what the
     // withdraw fee costs at each floor, including the base:usdc fee*2 edge at a 2 USDC withdraw.
     pools: { eth: { symbol: 'ETH', decimals: 18, native: true, minDeposit: 0.001 }, usdc: { symbol: 'USDC', decimals: 6, native: false, minDeposit: 3 } },
@@ -372,7 +372,7 @@ const CHAINS = {
     stablePool: 'usdt',
     nativePool: 'bnb',
     pools: {
-      bnb:  { symbol: 'BNB',  decimals: 18, native: true,  minDeposit: 0.02 },
+      bnb:  { symbol: 'BNB',  decimals: 18, native: true,  minDeposit: 0.01 },
       usdc: { symbol: 'USDC', decimals: 18, native: false, minDeposit: 3 },
       usdt: { symbol: 'USDT', decimals: 18, native: false, minDeposit: 3 },
     },

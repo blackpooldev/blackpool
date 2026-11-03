@@ -142,7 +142,7 @@ Result      pool → recipient. Nothing on-chain links the two.`}</Code>
               <thead><tr><th>Pool</th><th>Flat fee</th><th>Rate</th><th>Minimum deposit</th></tr></thead>
               <tbody>
                 <tr><td>ETH (Robinhood Chain, Base, Arbitrum)</td><td>0.00015 ETH</td><td>0.35%</td><td>0.001 ETH</td></tr>
-                <tr><td>BNB (BNB Chain)</td><td>0.001 BNB</td><td>0.35%</td><td>0.02 BNB</td></tr>
+                <tr><td>BNB (BNB Chain)</td><td>0.001 BNB</td><td>0.35%</td><td>0.01 BNB</td></tr>
                 <tr><td>USDC (Base)</td><td>1 USDC</td><td>0.35%</td><td>3 USDC</td></tr>
                 <tr><td>USDG (Robinhood Chain)</td><td>0.5 USDG</td><td>0.35%</td><td>3 USDG</td></tr>
                 <tr><td>USDC (Arbitrum, BNB Chain) · USDT (BNB Chain)</td><td>0.5</td><td>0.35%</td><td>3</td></tr>

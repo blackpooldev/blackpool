@@ -184,7 +184,7 @@ Sweep every registered burner that still holds funds to the agent wallet (or `--
 | `base` (default) | `eth`, `usdc` | 0.001 ETH · 3 USDC | 0.001 ETH · 2 USDC | 0.00015 ETH · 1 USDC | Uniswap V3 |
 | `robinhood` | `eth`, `usdg` | 0.001 ETH · 3 USDG | 0.001 ETH · 2 USDG | 0.00015 ETH · 0.5 USDG | Uniswap V3 |
 | `arbitrum` | `eth`, `usdc` | 0.001 ETH · 3 USDC | 0.001 ETH · 2 USDC | 0.00015 ETH · 0.5 USDC | Uniswap V3 |
-| `bsc` | `bnb`, `usdc`, `usdt` | 0.02 BNB · 3 USDC/USDT | 0.001 BNB · 2 USDC/USDT | 0.001 BNB · 0.5 USDC/USDT | PancakeSwap V3 |
+| `bsc` | `bnb`, `usdc`, `usdt` | 0.01 BNB · 3 USDC/USDT | 0.001 BNB · 2 USDC/USDT | 0.001 BNB · 0.5 USDC/USDT | PancakeSwap V3 |
 
 - **Fee** on every private spend = flat fee + 0.35% of the amount, deducted from the amount. Example: `send 10` USDC on Base → fee 1 + 0.035 = 1.035, recipient gets 8.965.
 - A spend must be more than twice its own fee; the CLI enforces the minimums above before doing anything.

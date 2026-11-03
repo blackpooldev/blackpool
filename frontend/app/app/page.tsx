@@ -120,12 +120,13 @@ const POOL_META: Record<string, { symbol: string; logo: string; decimals: number
   //
   // Operator set these for a low, uniform entry point -- they are NOT derived from a fee-ratio
   // rule. Every stablecoin pool is a flat 3 units (~$3) so shielding costs the same on every
-  // chain regardless of that pool's flat fee. Native pools stay 0.001 ETH / 0.02 BNB.
+  // chain regardless of that pool's flat fee. Native pools are 0.001 ETH / 0.01 BNB.
   //
   // Fee at the floor, worth knowing before touching these (flat fees themselves are unchanged):
   //   base:usdc      flat 1 USDC   -> fee 1.0105 on a 3 deposit = ~34%
   //   other stables  flat 0.5      -> fee 0.5105 on a 3 deposit = ~17%
   //   ETH pools      flat 0.00015  -> ~15.35% at the 0.001 floor
+  //   BNB pool       flat 0.001    -> ~10.35% at the 0.01 floor
   //
   // SHARP EDGE on base:usdc, accepted deliberately: its flat fee is 1 USDC while MIN_TX_STABLE is
   // 2, and the relayer refuses any withdraw where fee*2 >= amount. At a 2 USDC withdraw the fee is
@@ -138,7 +139,7 @@ const POOL_META: Record<string, { symbol: string; logo: string; decimals: number
   'robinhood:usdg': { symbol: 'USDG', logo: '/token_logos/usdg.png?v=1', decimals: 6, isNative: false, minDeposit: 3 },
   'arbitrum:eth': { symbol: 'ETH', logo: '/token_logos/eth.png', decimals: 18, isNative: true, minDeposit: 0.001 },
   'arbitrum:usdc': { symbol: 'USDC', logo: '/token_logos/usdc.png', decimals: 6, isNative: false, minDeposit: 3 },
-  'bsc:bnb': { symbol: 'BNB', logo: '/token_logos/bnb.png', decimals: 18, isNative: true, minDeposit: 0.02 },
+  'bsc:bnb': { symbol: 'BNB', logo: '/token_logos/bnb.png', decimals: 18, isNative: true, minDeposit: 0.01 },
   'bsc:usdc': { symbol: 'USDC', logo: '/token_logos/usdc.png', decimals: 18, isNative: false, minDeposit: 3 },
   'bsc:usdt': { symbol: 'USDT', logo: '/token_logos/usdt.png', decimals: 18, isNative: false, minDeposit: 3 },
   // Arc: the pool holds USDC via its ERC-20 interface (6 decimals @ 0x3600..), so isNative=false and
