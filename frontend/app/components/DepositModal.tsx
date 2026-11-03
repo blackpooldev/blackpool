@@ -51,7 +51,7 @@ function DepositConvToggle({ amount, symbol, fiatMode, setFiatMode, fiatText, se
 
 // "Top up private balance" deposit popup.
 // Isolated from send/swap/bridge forms so its button can never bubble into a send submit.
-export function DepositModal({ open, onClose, poolSym, amount, setAmount, onDeposit, busy, txHash, walletBalance, status, chainLabel = 'Base' }: {
+export function DepositModal({ open, onClose, poolSym, amount, setAmount, onDeposit, busy, txHash, walletBalance, maxAmount, gasNote, status, chainLabel = 'Base' }: {
   open: boolean
   onClose: () => void
   poolSym: string
@@ -61,6 +61,8 @@ export function DepositModal({ open, onClose, poolSym, amount, setAmount, onDepo
   busy: boolean
   txHash?: string
   walletBalance?: string   // formatted, e.g. "10.971163"
+  maxAmount?: string       // what MAX fills in; native pools pass the balance minus the deposit's gas
+  gasNote?: string         // e.g. "MAX keeps 0.0001 ETH for gas"
   status?: string          // in-progress status line, e.g. "generating ZK proof..."
   chainLabel?: string      // active chain label (Base | Robinhood) for the explorer link
 }) {
@@ -102,7 +104,8 @@ export function DepositModal({ open, onClose, poolSym, amount, setAmount, onDepo
           <div className="amount_box_opt">
             {walletBalance && (
               <span
-                onClick={() => { if (!busy) { setAmount(walletBalance); if (fiatMode && usdPrice) setFiatText((parseFloat(walletBalance) * usdPrice).toFixed(2)) } }}
+                onClick={() => { if (!busy) { const m = maxAmount ?? walletBalance; setAmount(m); if (fiatMode && usdPrice) setFiatText((parseFloat(m) * usdPrice).toFixed(2)) } }}
+                title={gasNote}
                 className="withdraw_max"
                 style={{ cursor: busy ? 'default' : 'pointer' }}
               >MAX</span>
@@ -132,7 +135,7 @@ export function DepositModal({ open, onClose, poolSym, amount, setAmount, onDepo
 
         {walletBalance && (
           <div style={{ fontSize: 12.5, color: 'var(--color-muted)', marginTop: 8 }}>
-            Wallet balance: {walletBalance} {poolSym}
+            Wallet balance: {walletBalance} {poolSym}{gasNote ? <span style={{ color: 'var(--color-fg3, #6e7074)' }}> · {gasNote}</span> : null}
           </div>
         )}
 

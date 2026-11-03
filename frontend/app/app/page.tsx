@@ -8,7 +8,8 @@ import {
   useDisconnect,
   useSignMessage,
   useReadContract,
-  useWalletClient
+  useWalletClient,
+  useGasPrice
 } from 'wagmi';
 import { erc20Abi, formatUnits } from 'viem';
 import { base } from 'wagmi/chains';
@@ -395,6 +396,20 @@ export default function Home() {
   const { data: balance } = useBalance({ address, chainId: activeChainId })
   const { data: stableRaw } = useReadContract({ address: activeStableToken, abi: erc20Abi, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: activeChainId, query: { enabled: !!address } })
   const { data: stableDecimals } = useReadContract({ address: activeStableToken, abi: erc20Abi, functionName: 'decimals', chainId: activeChainId })
+  // MAX on a native pool leaves the deposit's own gas in the wallet. A deposit uses ~1.3M gas and the wallet holds
+  // gasLimit (~2.0M) x maxFee up front, so keep gasPrice x 2.2M x 2, never less than a small per-chain floor.
+  const { data: gasPrice } = useGasPrice({ chainId: activeChainId, query: { enabled: meta.isNative, refetchInterval: 30_000 } })
+  const gasFloorWei = activeChain === 'bsc' ? 500_000_000_000_000n : 100_000_000_000_000n // 0.0005 BNB / 0.0001 ETH
+  const gasReserveWei = (() => { const g = (gasPrice ?? 0n) * 2_200_000n * 2n; return g > gasFloorWei ? g : gasFloorWei })()
+  const depositMax = meta.isNative && balance
+    ? (() => {
+        const left = balance.value - gasReserveWei
+        if (left <= 0n) return '0'
+        const step = 10n ** BigInt(Math.max(0, balance.decimals - 5)) // floor to 5 decimals
+        return formatUnits(left - (left % step), balance.decimals)
+      })()
+    : undefined
+  const depositGasNote = meta.isNative ? `MAX keeps ${parseFloat(Number(formatUnits(gasReserveWei, 18)).toPrecision(2))} ${meta.symbol} for gas` : undefined
   // shown in the deposit modal: native for the eth pool, stablecoin for the non-native pool
   const depositWalletBalance = meta.isNative
     ? (balance ? fmt3(formatUnits(balance.value, balance.decimals)) : undefined)
@@ -1441,6 +1456,8 @@ export default function Home() {
       busy={isTrading}
       txHash={depositTx ?? undefined}
       walletBalance={depositWalletBalance}
+      maxAmount={depositMax}
+      gasNote={depositGasNote}
       status={status ?? undefined}
       chainLabel={CHAIN_POOLS[activeChain].label}
     />
