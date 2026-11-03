@@ -277,6 +277,10 @@ const WalletIcon = () => (
   </div>
 )
 
+// Burners a flow is working on right now (lowercase address). The background scanner and recoverBurner skip these,
+// so a swap's own reshield and the auto-recovery never broadcast for the same burner at once.
+const busyBurners = new Set<string>()
+
 export default function Home() {
   const [tab, setTab] = useState<Tab>('send');
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
@@ -530,6 +534,7 @@ export default function Home() {
           const stableC = new ethers.Contract(stableTok, ['function balanceOf(address) view returns (uint256)'], p)
           for (const c of candidates) {
             if (cancelled) return
+            if (busyBurners.has(c.address.toLowerCase())) continue // a running swap/recovery owns it
             const stableBal: bigint = await stableC.balanceOf(c.address)
             if (stableBal >= stableDustFloor) { hit = { ...c, pool: stablePool, raw: stableBal, chain }; hitMeta = stableMeta; break }
             // On single-pool chains (Arc: USDC is the gas token AND the only pool) the "native" and
@@ -561,7 +566,7 @@ export default function Home() {
         if (hit.raw < floor) {
           // dust: show it but never auto-broadcast (would revert + burn gas). Manual button still allowed.
           autoRecoverRef.current = hit.address
-        } else if (!isTrading && autoRecoverRef.current !== hit.address) {
+        } else if (busyBurners.size === 0 && autoRecoverRef.current !== hit.address) { // (isTrading is a stale closure here)
           autoRecoverRef.current = hit.address // set before attempt so concurrent ticks don't double-fire
           // On FAILURE clear the ref so the next 20s tick retries (e.g. a transient gas-topup or RPC
           // error, or a fix deployed mid-session). We only guard against double-firing WHILE trading,
@@ -1061,6 +1066,16 @@ export default function Home() {
     const destMeta = POOL_META[`${recoverChain}:${destPool}`] || POOL_META[`${recoverChain}:${CHAIN_POOLS[recoverChain].pools[0]}`]
     const destSym = destMeta.symbol
     const destDecimals = destMeta.decimals
+    const lockKey = bw.address.toLowerCase()
+    if (busyBurners.has(lockKey)) return // another flow is reshielding this burner right now
+    const burnerBal = async (): Promise<bigint> => destMeta.isNative
+      ? await provider.getBalance(bw.address)
+      : await new ethers.Contract(DEX[recoverChain].stable, ['function balanceOf(address) view returns (uint256)'], provider).balanceOf(bw.address)
+    // Re-read right before acting: the funds may have been reshielded since the scan.
+    try {
+      if ((await burnerBal()) * BigInt(100) < rawBal * BigInt(99)) { setStuckBurner(null); setPrivateBalanceChanged(prev => prev + 1); return }
+    } catch { /* RPC hiccup: go on with the scanned amount */ }
+    busyBurners.add(lockKey)
     const steps: Step[] = [
       { id: 1, title: 'Recover stuck funds', sub: `${ethers.formatUnits(rawBal, destDecimals)} ${destSym} on burner` },
       { id: 2, title: 'Reshield to private', sub: `deposit to ${destSym} pool` },
@@ -1154,13 +1169,24 @@ export default function Home() {
       await sendResilient({ to: prep.to, data: prep.data, value: BigInt(prep.value || '0'), gasLimit: RESHIELD_GAS })
       setStepper({ steps, active: steps.length, error: null })
       setStatus(`Recovered! +${destAmount} ${destSym} in your private balance`)
+      setStuckBurner(null)
       setPrivateBalanceChanged(prev => prev + 1)
     } catch (err) {
       const m = err instanceof Error ? err.message : String(err)
+      // If the burner is empty now, the funds were already reshielded (e.g. by the swap that created it): done.
+      let gone = false
+      try { gone = (await burnerBal()) * BigInt(100) < rawBal * BigInt(5) } catch { /* unknown: report the error */ }
+      if (gone) {
+        setStepper({ steps, active: steps.length, error: null })
+        setStatus(`Already in your private balance`)
+        setStuckBurner(null)
+        setPrivateBalanceChanged(prev => prev + 1)
+        return
+      }
       setStepper(prev => prev ? { ...prev, error: `${m} - funds still safe on burner, auto-recovery will retry` } : null)
       setStatus('')
       throw err // re-throw so the auto-resume caller clears autoRecoverRef and the next scan retries
-    } finally { setIsTrading(false) }
+    } finally { setIsTrading(false); busyBurners.delete(lockKey) }
   }
 
   // Same-chain swap-to-private. Line-by-line port of scripts/uniswap_swap_test.js (backend-verified,
@@ -1201,12 +1227,15 @@ export default function Home() {
     // relayer rejects the withdraw for insufficient private balance), NOTHING moved — so the error
     // must NOT claim "funds safe on burner, recovery will retry" (there's nothing on the burner).
     let fundedBurner = false
+    let swapBurner = ''
     try {
       // 0) fresh RANDOM ephemeral burner, registered (encrypted key) BEFORE funding so a stall at
       // any later step is always recoverable from any device. No slots, no nonce scan, never "stuck".
       const authSig = await getRegistryAuthSig()
       const bState = await createAndRegisterBurner({ signInSig: signature, authSig, chain: activeChain, token: USDC_BASE })
       const bw = burnerWallet(bState, provider)
+      swapBurner = bState.address.toLowerCase()
+      busyBurners.add(swapBurner) // the background scanner must not reshield this burner while we do
 
       // 1) withdraw private → burner (relayer). Server owns retry semantics.
       setStatus('submitting to relayer...')
@@ -1386,6 +1415,7 @@ export default function Home() {
 
       setStep(swapSteps.length)
       setStatus(`Swapped to private! +${destAmount} ${destSym} in your private balance`)
+      setStuckBurner(null)
       setSwapAmount('')
       setPrivateBalanceChanged(prev => prev + 1)
     } catch (err) {
@@ -1403,6 +1433,7 @@ export default function Home() {
       // so the user had to manually refresh. Bumping the trigger re-runs the scan + auto-resume.
       setPrivateBalanceChanged(prev => prev + 1)
     } finally {
+      if (swapBurner) busyBurners.delete(swapBurner) // a failed swap's burner is now fair game for auto-recovery
       setIsTrading(false)
     }
   }
