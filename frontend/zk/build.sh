@@ -10,6 +10,8 @@ cd "$(dirname "$0")/.."
 OUT=public/zk
 SRC=../build/circuits
 mkdir -p "$OUT"
+# the worker bundles cli/lib, which needs the CLI dependencies (ethers v5, snarkjs, poseidon-lite)
+[ -d ../cli/node_modules/ethers ] || npm ci --prefix ../cli --omit=dev --no-audit --no-fund
 rm -f "$OUT"/transaction2-*.wasm "$OUT"/transaction2-*.zkey
 entry() {
   local kind=$1 f=$SRC/transaction2.$1

@@ -1,5 +1,5 @@
 const crypto = require('crypto')
-const { ethers } = require('hardhat')
+const { ethers } = require('ethers5')
 const { Keypair } = require('./keypair')
 
 const SIGN_IN_MESSAGE = 'Welcome to Blackpool\n\nSign this message to access your private account.\n\n- Gas free: no transaction is sent\n- Your private account keys are derived from this signature\n- It cannot move funds from your wallet or approve spending\n- Only sign it on blackpool.cash or the Blackpool CLI'

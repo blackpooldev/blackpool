@@ -1,4 +1,4 @@
-const { ethers } = require('hardhat')
+const { ethers } = require('ethers5')
 const { BigNumber } = ethers
 const { randomBN, poseidonHash, toBuffer } = require('./utils')
 const { Keypair } = require('./keypair')

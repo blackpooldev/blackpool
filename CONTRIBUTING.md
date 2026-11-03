@@ -12,7 +12,7 @@ Thanks for looking at Blackpool. The project is small and opinionated, so a litt
 
 ```bash
 npm install
-npm run compile      # hardhat + Poseidon hasher bytecode
+npm run compile      # Hardhat 3 build + Poseidon hasher bytecode
 npm test             # 149 tests, real Groth16 proofs, about two minutes
 cd frontend && npm install && npm run dev
 ```

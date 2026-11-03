@@ -1,110 +1,15 @@
-const hre = require('hardhat')
-const { ethers, waffle } = hre
-const { loadFixture } = waffle
-const { expect } = require('chai')
-const { utils } = ethers
+import { expect } from 'chai'
+import { network } from 'hardhat'
+import {
+  MERKLE_TREE_HEIGHT, BigNumber, Utxo, toFixedHex, poseidonHash, getExtDataHash, signIn, encrypt, decrypt,
+  createEmptyTree, prepareTransaction, deploy, deployHasher, deployPoolProxy,
+} from './helpers.js'
 
-const { MerkleTree } = require('fixed-merkle-tree')
-const Utxo = require('../src/utxo')
-const { toFixedHex, poseidonHash, poseidonHash2, getExtDataHash, FIELD_SIZE } = require('../src/utils')
-const { Keypair } = require('../src/keypair')
-const { signIn, encrypt, decrypt } = require('../src/encryption')
-const { prove } = require('../src/prover')
-const { BigNumber } = ethers
-const MERKLE_TREE_HEIGHT = 26
-const MERKLE_TREE_ZERO_VALUE = '13957331740549083428539157647087363326246483135047439495076507042642183216086'
-const MAXIMUM_DEPOSIT_AMOUNT = utils.parseEther('1')
-const MINIMUM_AMOUNT = utils.parseEther('0.0005')
+const { ethers, networkHelpers } = await network.create()
+const { loadFixture } = networkHelpers
 
-function createEmptyTree() {
-  return new MerkleTree(MERKLE_TREE_HEIGHT, [], { hashFunction: poseidonHash2, zeroElement: MERKLE_TREE_ZERO_VALUE })
-}
-
-async function getProof({ inputs, outputs, tree, extAmount, fee, recipient, feeRecipient, encryptionKey }) {
-  const inputMerklePathIndices = []
-  const inputMerklePathElements = []
-
-  for (const input of inputs) {
-    if (input.amount.gt(0)) {
-      input.index = tree.indexOf(toFixedHex(input.getCommitment()))
-      if (input.index < 0) {
-        throw new Error(`Input commitment ${toFixedHex(input.getCommitment())} was not found`)
-      }
-      inputMerklePathIndices.push(input.index)
-      inputMerklePathElements.push(tree.path(input.index).pathElements)
-    } else {
-      inputMerklePathIndices.push(0)
-      inputMerklePathElements.push(new Array(MERKLE_TREE_HEIGHT).fill(0))
-    }
-  }
-
-  let nextIndex = tree._layers[0].length
-  for (const output of outputs) {
-    output.index = nextIndex++
-  }
-
-  const extData = {
-    recipient: toFixedHex(recipient, 20),
-    extAmount: toFixedHex(extAmount),
-    feeRecipient: toFixedHex(feeRecipient, 20),
-    fee: toFixedHex(fee),
-    encryptedOutput1: outputs[0].encrypt(encryptionKey),
-    encryptedOutput2: outputs[1].encrypt(encryptionKey),
-  }
-
-  const extDataHash = getExtDataHash(extData)
-  const input = {
-    root: toFixedHex(tree.root),
-    inputNullifier: inputs.map((x) => x.getNullifier().toString()),
-    outputCommitment: outputs.map((x) => x.getCommitment().toString()),
-    publicAmount: BigNumber.from(extAmount).sub(fee).add(FIELD_SIZE).mod(FIELD_SIZE).toString(),
-    extDataHash: extDataHash.toString(),
-    mintAddress: inputs[0].mintAddress.toString(),
-    inAmount: inputs.map((x) => x.amount.toString()),
-    inPrivateKey: inputs.map((x) => x.keypair.privkey.toString()),
-    inBlinding: inputs.map((x) => x.blinding.toString()),
-    inPathIndices: inputMerklePathIndices,
-    inPathElements: inputMerklePathElements,
-    outAmount: outputs.map((x) => x.amount.toString()),
-    outBlinding: outputs.map((x) => x.blinding.toString()),
-    outPubkey: outputs.map((x) => x.keypair.pubkey.toString()),
-  }
-
-  const { pA, pB, pC } = await prove(input, `./build/circuits/transaction${inputs.length}`)
-
-  const args = {
-    pA, pB, pC,
-    root: toFixedHex(input.root),
-    inputNullifiers: inputs.map((x) => toFixedHex(x.getNullifier())),
-    outputCommitments: outputs.map((x) => toFixedHex(x.getCommitment())),
-    publicAmount: toFixedHex(input.publicAmount),
-    extDataHash: toFixedHex(extDataHash),
-  }
-
-  return { extData, args, outputs }
-}
-
-async function prepareTransaction({ tree, inputs = [], outputs = [], fee = 0, recipient = 0, feeRecipient = 0, encryptionKey }) {
-  if (inputs.length > 2 || outputs.length > 2) {
-    throw new Error('Incorrect inputs/outputs count')
-  }
-  while (inputs.length < 2) {
-    inputs.push(new Utxo())
-  }
-  while (outputs.length < 2) {
-    outputs.push(new Utxo())
-  }
-
-  const extAmount = BigNumber.from(fee)
-    .add(outputs.reduce((sum, x) => sum.add(x.amount), BigNumber.from(0)))
-    .sub(inputs.reduce((sum, x) => sum.add(x.amount), BigNumber.from(0)))
-
-  const { args, extData, outputs: paddedOutputs } = await getProof({
-    inputs, outputs, tree, extAmount, fee, recipient, feeRecipient, encryptionKey,
-  })
-
-  return { args, extData, outputs: paddedOutputs }
-}
+const MAXIMUM_DEPOSIT_AMOUNT = ethers.parseEther('1')
+const MINIMUM_AMOUNT = ethers.parseEther('0.0005')
 
 async function transaction({ etherPool, tree, ...rest }) {
   const { args, extData, outputs } = await prepareTransaction({ tree, ...rest })
@@ -112,7 +17,7 @@ async function transaction({ etherPool, tree, ...rest }) {
   const overrides = { gasLimit: 3000000 }
   const extAmount = BigNumber.from(extData.extAmount)
   if (extAmount.gt(0)) {
-    overrides.value = extAmount
+    overrides.value = extAmount.toBigInt()
   }
 
   const receipt = await etherPool.transact(args, extData, overrides)
@@ -128,36 +33,16 @@ async function transaction({ etherPool, tree, ...rest }) {
 describe('BlackpoolEtherPool', function () {
 
 
-  async function deploy(contractName, ...args) {
-    const Factory = await ethers.getContractFactory(contractName)
-    const instance = await Factory.deploy(...args)
-    return instance.deployed()
-  }
-
   async function fixture() {
-    require('../scripts/compileHasher')
     const [sender, gov, admin] = await ethers.getSigners()
-    const verifier2 = await deploy('Verifier2')
-    const hasher = await deploy('Hasher')
-
-    const BlackpoolEtherPool = await ethers.getContractFactory('BlackpoolEtherPool')
-    const implementation = await BlackpoolEtherPool.deploy(
-      verifier2.address,
-      MERKLE_TREE_HEIGHT,
-      hasher.address,
+    const verifier2 = await deploy(ethers, 'Verifier2')
+    const hasher = await deployHasher(ethers)
+    const { pool: etherPool } = await deployPoolProxy(
+      ethers,
+      'BlackpoolEtherPool',
+      [await verifier2.getAddress(), MERKLE_TREE_HEIGHT, await hasher.getAddress()],
+      [MAXIMUM_DEPOSIT_AMOUNT, MINIMUM_AMOUNT, admin.address],
     )
-    await implementation.deployed()
-
-    const initData = BlackpoolEtherPool.interface.encodeFunctionData('initialize', [
-      MAXIMUM_DEPOSIT_AMOUNT,
-      MINIMUM_AMOUNT,
-      admin.address,
-    ])
-    const ERC1967Proxy = await ethers.getContractFactory('ERC1967Proxy')
-    const proxy = await ERC1967Proxy.deploy(implementation.address, initData)
-    await proxy.deployed()
-
-    const etherPool = BlackpoolEtherPool.attach(proxy.address)
 
     // Derive encryption key and UTXO keypair from sender's signature
     const { encryptionKey, keypair } = await signIn(sender)
@@ -167,7 +52,7 @@ describe('BlackpoolEtherPool', function () {
 
   it('should configure', async () => {
     const { etherPool, admin } = await loadFixture(fixture)
-    const newDepositLimit = utils.parseEther('1337')
+    const newDepositLimit = ethers.parseEther('1337')
 
     await etherPool.connect(admin).configureMaximumDepositAmount(newDepositLimit)
 
@@ -190,7 +75,7 @@ describe('BlackpoolEtherPool', function () {
     const maxExtAmount = await etherPool.MAX_EXT_AMOUNT()
     const fieldSize = await etherPool.FIELD_SIZE()
 
-    expect(maxExtAmount.add(maxFee)).to.be.lt(fieldSize)
+    expect(maxExtAmount + maxFee).to.be.lt(fieldSize)
   })
 
   it('should deposit, transact and withdraw', async function () {
@@ -198,15 +83,15 @@ describe('BlackpoolEtherPool', function () {
     const tree = createEmptyTree()
 
     // Alice deposits into the pool
-    const aliceDepositAmount = utils.parseEther('0.1')
+    const aliceDepositAmount = ethers.parseEther('0.1')
     const aliceDepositUtxo = new Utxo({ amount: aliceDepositAmount, keypair })
     await transaction({ etherPool, tree, outputs: [aliceDepositUtxo], encryptionKey })
 
     // Alice withdraws a portion to Bob's address
     const bobEthAddress = '0xDeaD00000000000000000000000000000000BEEf'
-    const bobSendAmount = utils.parseEther('0.06')
+    const bobSendAmount = ethers.parseEther('0.06')
     const aliceChangeUtxo = new Utxo({
-      amount: aliceDepositAmount.sub(bobSendAmount),
+      amount: aliceDepositAmount - bobSendAmount,
       keypair,
     })
     await transaction({
@@ -231,8 +116,8 @@ describe('BlackpoolEtherPool', function () {
     })
 
     const aliceBalance = await ethers.provider.getBalance(aliceEthAddress)
-    expect(aliceBalance).to.be.equal(aliceDepositAmount.sub(bobSendAmount))
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(0)
+    expect(aliceBalance).to.be.equal(aliceDepositAmount - bobSendAmount)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(0n)
   })
 
   it('should deposit and withdraw with relayer fee', async function () {
@@ -240,27 +125,27 @@ describe('BlackpoolEtherPool', function () {
     const tree = createEmptyTree()
     const [, , , relayer] = await ethers.getSigners()
 
-    const aliceDepositAmount = utils.parseEther('0.1')
+    const aliceDepositAmount = ethers.parseEther('0.1')
     const aliceDepositUtxo = new Utxo({ amount: aliceDepositAmount, keypair })
 
-    const poolBalanceBefore = await ethers.provider.getBalance(etherPool.address)
-    expect(poolBalanceBefore).to.be.equal(0)
+    const poolBalanceBefore = await ethers.provider.getBalance((await etherPool.getAddress()))
+    expect(poolBalanceBefore).to.be.equal(0n)
 
     const senderBalanceBefore = await ethers.provider.getBalance(sender.address)
 
     const depositTx = await transaction({ etherPool, tree, outputs: [aliceDepositUtxo], encryptionKey })
 
     const senderBalanceAfterDeposit = await ethers.provider.getBalance(sender.address)
-    const depositGasUsed = utils.parseUnits(depositTx.gasUsed.toString(), 'wei').mul(depositTx.effectiveGasPrice)
-    expect(senderBalanceBefore.sub(senderBalanceAfterDeposit)).to.be.equal(aliceDepositAmount.add(depositGasUsed))
+    const depositGasUsed = depositTx.gasUsed * depositTx.gasPrice
+    expect(senderBalanceBefore - senderBalanceAfterDeposit).to.be.equal(aliceDepositAmount + depositGasUsed)
 
-    const poolBalanceAfterDeposit = await ethers.provider.getBalance(etherPool.address)
+    const poolBalanceAfterDeposit = await ethers.provider.getBalance((await etherPool.getAddress()))
     expect(poolBalanceAfterDeposit).to.be.equal(aliceDepositAmount)
 
     // Withdraw with relayer fee
-    const withdrawAmount = utils.parseEther('0.08')
-    const fee = utils.parseEther('0.01')
-    const changeAmount = aliceDepositAmount.sub(withdrawAmount).sub(fee)
+    const withdrawAmount = ethers.parseEther('0.08')
+    const fee = ethers.parseEther('0.01')
+    const changeAmount = aliceDepositAmount - withdrawAmount - fee
     const recipient = '0xDeaD00000000000000000000000000000000BEEf'
     const aliceChangeUtxo = new Utxo({
       amount: changeAmount,
@@ -285,16 +170,16 @@ describe('BlackpoolEtherPool', function () {
 
     // Relayer gets the fee
     const relayerBalanceAfter = await ethers.provider.getBalance(relayer.address)
-    expect(relayerBalanceAfter.sub(relayerBalanceBefore)).to.be.equal(fee)
+    expect(relayerBalanceAfter - relayerBalanceBefore).to.be.equal(fee)
 
     // Pool retains only the change amount
-    const poolBalanceAfterWithdraw = await ethers.provider.getBalance(etherPool.address)
+    const poolBalanceAfterWithdraw = await ethers.provider.getBalance((await etherPool.getAddress()))
     expect(poolBalanceAfterWithdraw).to.be.equal(changeAmount)
 
     // Sender paid gas for the withdraw tx but no ETH value
     const senderBalanceAfterWithdraw = await ethers.provider.getBalance(sender.address)
-    const withdrawGasUsed = utils.parseUnits(withdrawTx.gasUsed.toString(), 'wei').mul(withdrawTx.effectiveGasPrice)
-    expect(senderBalanceAfterDeposit.sub(senderBalanceAfterWithdraw)).to.be.equal(withdrawGasUsed)
+    const withdrawGasUsed = withdrawTx.gasUsed * withdrawTx.gasPrice
+    expect(senderBalanceAfterDeposit - senderBalanceAfterWithdraw).to.be.equal(withdrawGasUsed)
   })
 
   it('should deposit and withdraw with zero fee', async function () {
@@ -302,27 +187,27 @@ describe('BlackpoolEtherPool', function () {
     const tree = createEmptyTree()
     const [, , , relayer] = await ethers.getSigners()
 
-    const aliceDepositAmount = utils.parseEther('0.1')
+    const aliceDepositAmount = ethers.parseEther('0.1')
     const aliceDepositUtxo = new Utxo({ amount: aliceDepositAmount, keypair })
 
-    const poolBalanceBefore = await ethers.provider.getBalance(etherPool.address)
-    expect(poolBalanceBefore).to.be.equal(0)
+    const poolBalanceBefore = await ethers.provider.getBalance((await etherPool.getAddress()))
+    expect(poolBalanceBefore).to.be.equal(0n)
 
     const senderBalanceBefore = await ethers.provider.getBalance(sender.address)
 
     const depositTx = await transaction({ etherPool, tree, outputs: [aliceDepositUtxo], encryptionKey })
 
     const senderBalanceAfterDeposit = await ethers.provider.getBalance(sender.address)
-    const depositGasUsed = utils.parseUnits(depositTx.gasUsed.toString(), 'wei').mul(depositTx.effectiveGasPrice)
-    expect(senderBalanceBefore.sub(senderBalanceAfterDeposit)).to.be.equal(aliceDepositAmount.add(depositGasUsed))
+    const depositGasUsed = depositTx.gasUsed * depositTx.gasPrice
+    expect(senderBalanceBefore - senderBalanceAfterDeposit).to.be.equal(aliceDepositAmount + depositGasUsed)
 
-    const poolBalanceAfterDeposit = await ethers.provider.getBalance(etherPool.address)
+    const poolBalanceAfterDeposit = await ethers.provider.getBalance((await etherPool.getAddress()))
     expect(poolBalanceAfterDeposit).to.be.equal(aliceDepositAmount)
 
     // Withdraw with relayer fee
-    const withdrawAmount = utils.parseEther('0.08')
-    const fee = 0
-    const changeAmount = aliceDepositAmount.sub(withdrawAmount).sub(fee)
+    const withdrawAmount = ethers.parseEther('0.08')
+    const fee = 0n
+    const changeAmount = aliceDepositAmount - withdrawAmount - fee
     const recipient = '0xDeaD00000000000000000000000000000000BEEf'
     const aliceChangeUtxo = new Utxo({
       amount: changeAmount,
@@ -347,16 +232,16 @@ describe('BlackpoolEtherPool', function () {
 
     // Relayer gets the fee
     const relayerBalanceAfter = await ethers.provider.getBalance(relayer.address)
-    expect(relayerBalanceAfter.sub(relayerBalanceBefore)).to.be.equal(fee)
+    expect(relayerBalanceAfter - relayerBalanceBefore).to.be.equal(fee)
 
     // Pool retains only the change amount
-    const poolBalanceAfterWithdraw = await ethers.provider.getBalance(etherPool.address)
+    const poolBalanceAfterWithdraw = await ethers.provider.getBalance((await etherPool.getAddress()))
     expect(poolBalanceAfterWithdraw).to.be.equal(changeAmount)
 
     // Sender paid gas for the withdraw tx but no ETH value
     const senderBalanceAfterWithdraw = await ethers.provider.getBalance(sender.address)
-    const withdrawGasUsed = utils.parseUnits(withdrawTx.gasUsed.toString(), 'wei').mul(withdrawTx.effectiveGasPrice)
-    expect(senderBalanceAfterDeposit.sub(senderBalanceAfterWithdraw)).to.be.equal(withdrawGasUsed)
+    const withdrawGasUsed = withdrawTx.gasUsed * withdrawTx.gasPrice
+    expect(senderBalanceAfterDeposit - senderBalanceAfterWithdraw).to.be.equal(withdrawGasUsed)
   })
 
   it('attacker cannot frontrun withdraw by replacing recipient', async function () {
@@ -364,7 +249,7 @@ describe('BlackpoolEtherPool', function () {
     const tree = createEmptyTree()
     const [, , , , attacker] = await ethers.getSigners()
 
-    const aliceDepositAmount = utils.parseEther('0.1')
+    const aliceDepositAmount = ethers.parseEther('0.1')
     const aliceDepositUtxo = new Utxo({ amount: aliceDepositAmount, keypair })
     await transaction({ etherPool, tree, outputs: [aliceDepositUtxo], encryptionKey })
 
@@ -402,7 +287,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -425,7 +310,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -434,7 +319,7 @@ describe('BlackpoolEtherPool', function () {
     })
 
     // Tamper with fee after proof was generated
-    extData.fee = toFixedHex(utils.parseEther('0.01'))
+    extData.fee = toFixedHex(ethers.parseEther('0.01'))
 
     await expect(
       etherPool.transact(args, extData, {
@@ -448,14 +333,14 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey, keypair } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const aliceDepositAmount = utils.parseEther('0.1')
+    const aliceDepositAmount = ethers.parseEther('0.1')
     const aliceDepositUtxo = new Utxo({ amount: aliceDepositAmount, keypair })
     await transaction({ etherPool, tree, outputs: [aliceDepositUtxo], encryptionKey })
 
     const bobAddress = '0xDeaD00000000000000000000000000000000BEEf'
-    const withdrawAmount = utils.parseEther('0.05')
+    const withdrawAmount = ethers.parseEther('0.05')
     const aliceChangeUtxo = new Utxo({
-      amount: aliceDepositAmount.sub(withdrawAmount),
+      amount: aliceDepositAmount - withdrawAmount,
       keypair,
     })
     await transaction({
@@ -483,7 +368,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const overLimitAmount = MAXIMUM_DEPOSIT_AMOUNT.add(1)
+    const overLimitAmount = MAXIMUM_DEPOSIT_AMOUNT + 1n
     const utxo = new Utxo({ amount: overLimitAmount })
     await expect(
       transaction({ etherPool, tree, outputs: [utxo], encryptionKey }),
@@ -493,14 +378,14 @@ describe('BlackpoolEtherPool', function () {
   it('non-admin cannot configure limits', async () => {
     const { etherPool, sender } = await loadFixture(fixture)
     await expect(
-      etherPool.connect(sender).configureMaximumDepositAmount(utils.parseEther('999')),
+      etherPool.connect(sender).configureMaximumDepositAmount(ethers.parseEther('999')),
     ).to.be.revertedWith('only admin')
   })
 
   it('should reject direct ETH transfers', async function () {
     const { etherPool, sender } = await loadFixture(fixture)
     await expect(
-      sender.sendTransaction({ to: etherPool.address, value: utils.parseEther('1') }),
+      sender.sendTransaction({ to: (await etherPool.getAddress()), value: ethers.parseEther('1') }),
     ).to.be.revertedWith('Use transact() to deposit')
   })
 
@@ -513,7 +398,7 @@ describe('BlackpoolEtherPool', function () {
 
     await etherPool.connect(gov).claimAdmin()
     expect(await etherPool.admin()).to.equal(gov.address)
-    expect(await etherPool.pendingAdmin()).to.equal(ethers.constants.AddressZero)
+    expect(await etherPool.pendingAdmin()).to.equal(ethers.ZeroAddress)
   })
 
   it('non-admin cannot transfer admin', async function () {
@@ -534,7 +419,7 @@ describe('BlackpoolEtherPool', function () {
   it('cannot transfer admin to zero address', async function () {
     const { etherPool, admin } = await loadFixture(fixture)
     await expect(
-      etherPool.connect(admin).transferAdmin(ethers.constants.AddressZero),
+      etherPool.connect(admin).transferAdmin(ethers.ZeroAddress),
     ).to.be.revertedWith('new admin is zero address')
   })
 
@@ -561,20 +446,20 @@ describe('BlackpoolEtherPool', function () {
     await etherPool.connect(admin).transferAdmin(gov.address)
     await etherPool.connect(gov).claimAdmin()
 
-    const newLimit = utils.parseEther('500')
+    const newLimit = ethers.parseEther('500')
     await etherPool.connect(gov).configureMaximumDepositAmount(newLimit)
     expect(await etherPool.maximumDepositAmount()).to.equal(newLimit)
 
     await expect(
-      etherPool.connect(admin).configureMaximumDepositAmount(utils.parseEther('1')),
+      etherPool.connect(admin).configureMaximumDepositAmount(ethers.parseEther('1')),
     ).to.be.revertedWith('only admin')
   })
 
   it('cannot initialize twice', async function () {
     const { etherPool, admin } = await loadFixture(fixture)
     await expect(
-      etherPool.connect(admin).initialize(utils.parseEther('2'), MINIMUM_AMOUNT, admin.address),
-    ).to.be.reverted
+      etherPool.connect(admin).initialize(ethers.parseEther('2'), MINIMUM_AMOUNT, admin.address),
+    ).to.revert(ethers)
   })
 
   it('should deposit and withdraw full amount, then deposit again', async function () {
@@ -582,7 +467,7 @@ describe('BlackpoolEtherPool', function () {
     const tree = createEmptyTree()
 
     // First cycle: deposit and withdraw everything
-    const depositAmount1 = utils.parseEther('0.1')
+    const depositAmount1 = ethers.parseEther('0.1')
     const depositUtxo1 = new Utxo({ amount: depositAmount1 })
     await transaction({ etherPool, tree, outputs: [depositUtxo1], encryptionKey })
 
@@ -596,14 +481,14 @@ describe('BlackpoolEtherPool', function () {
     })
 
     expect(await ethers.provider.getBalance(recipient1)).to.be.equal(depositAmount1)
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(0)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(0n)
 
     // Second cycle: deposit again after pool was fully drained
-    const depositAmount2 = utils.parseEther('0.05')
+    const depositAmount2 = ethers.parseEther('0.05')
     const depositUtxo2 = new Utxo({ amount: depositAmount2 })
     await transaction({ etherPool, tree, outputs: [depositUtxo2], encryptionKey })
 
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(depositAmount2)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(depositAmount2)
 
     // Withdraw from the second deposit
     const recipient2 = '0x000000000000000000000000000000000000dEaD'
@@ -616,14 +501,14 @@ describe('BlackpoolEtherPool', function () {
     })
 
     expect(await ethers.provider.getBalance(recipient2)).to.be.equal(depositAmount2)
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(0)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(0n)
   })
 
   it('can deposit after increasing limit', async function () {
     const { etherPool, admin, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const largeAmount = utils.parseEther('5')
+    const largeAmount = ethers.parseEther('5')
     const utxo = new Utxo({ amount: largeAmount })
 
     // Should fail with default limit (1 ETH)
@@ -632,11 +517,11 @@ describe('BlackpoolEtherPool', function () {
     ).to.be.revertedWith('amount is larger than maximumDepositAmount')
 
     // Increase limit
-    await etherPool.connect(admin).configureMaximumDepositAmount(utils.parseEther('1000'))
+    await etherPool.connect(admin).configureMaximumDepositAmount(ethers.parseEther('1000'))
 
     // Should now succeed
     await transaction({ etherPool, tree, outputs: [utxo], encryptionKey })
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(largeAmount)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(largeAmount)
   })
 
   it('cannot deposit after decreasing limit', async function () {
@@ -644,14 +529,14 @@ describe('BlackpoolEtherPool', function () {
     const tree = createEmptyTree()
 
     // Deposit 0.5 ETH (within default 1 ETH limit)
-    const depositUtxo = new Utxo({ amount: utils.parseEther('0.5') })
+    const depositUtxo = new Utxo({ amount: ethers.parseEther('0.5') })
     await transaction({ etherPool, tree, outputs: [depositUtxo], encryptionKey })
 
     // Decrease limit to 0.1 ETH
-    await etherPool.connect(admin).configureMaximumDepositAmount(utils.parseEther('0.1'))
+    await etherPool.connect(admin).configureMaximumDepositAmount(ethers.parseEther('0.1'))
 
     // Now 0.5 ETH deposit should fail
-    const utxo = new Utxo({ amount: utils.parseEther('0.5') })
+    const utxo = new Utxo({ amount: ethers.parseEther('0.5') })
     await expect(
       transaction({ etherPool, tree, outputs: [utxo], encryptionKey }),
     ).to.be.revertedWith('amount is larger than maximumDepositAmount')
@@ -662,17 +547,17 @@ describe('BlackpoolEtherPool', function () {
     const tree = createEmptyTree()
 
     // Set limit high enough for initial deposit
-    await etherPool.connect(admin).configureMaximumDepositAmount(utils.parseEther('200'))
+    await etherPool.connect(admin).configureMaximumDepositAmount(ethers.parseEther('200'))
 
     // Deposit 100 ETH
-    const depositAmount = utils.parseEther('100')
+    const depositAmount = ethers.parseEther('100')
     const depositUtxo = new Utxo({ amount: depositAmount })
     await transaction({ etherPool, tree, outputs: [depositUtxo], encryptionKey })
 
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(depositAmount)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(depositAmount)
 
     // Lower deposit limit to 50 ETH
-    await etherPool.connect(admin).configureMaximumDepositAmount(utils.parseEther('50'))
+    await etherPool.connect(admin).configureMaximumDepositAmount(ethers.parseEther('50'))
 
     // Verify new 100 ETH deposit fails
     const blockedUtxo = new Utxo({ amount: depositAmount })
@@ -691,14 +576,14 @@ describe('BlackpoolEtherPool', function () {
     })
 
     expect(await ethers.provider.getBalance(recipient)).to.be.equal(depositAmount)
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(0)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(0n)
   })
 
   it('arithmetic overflow protection', async function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -707,14 +592,14 @@ describe('BlackpoolEtherPool', function () {
     })
 
     // Set publicAmount to max uint256 (would overflow in unchecked math)
-    args.publicAmount = ethers.constants.MaxUint256.toHexString()
+    args.publicAmount = ethers.toBeHex(ethers.MaxUint256)
 
     await expect(
       etherPool.transact(args, extData, {
         value: depositAmount,
         gasLimit: 50e6,
       }),
-    ).to.be.reverted
+    ).to.revert(ethers)
   })
 
   it('should deposit with zero fee and withdraw with positive fee', async function () {
@@ -723,14 +608,14 @@ describe('BlackpoolEtherPool', function () {
     const [, , , relayer] = await ethers.getSigners()
 
     // Deposit with zero fee
-    const depositAmount = utils.parseEther('0.1')
+    const depositAmount = ethers.parseEther('0.1')
     const depositUtxo = new Utxo({ amount: depositAmount })
     await transaction({ etherPool, tree, outputs: [depositUtxo], fee: 0, encryptionKey })
 
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(depositAmount)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(depositAmount)
 
     // Withdraw with positive relayer fee
-    const withdrawFee = utils.parseEther('0.02')
+    const withdrawFee = ethers.parseEther('0.02')
     const recipient = '0xDeaD00000000000000000000000000000000BEEf'
     await transaction({
       etherPool, tree,
@@ -743,15 +628,15 @@ describe('BlackpoolEtherPool', function () {
     })
 
     const recipientBalance = await ethers.provider.getBalance(recipient)
-    expect(recipientBalance).to.be.equal(depositAmount.sub(withdrawFee))
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(0)
+    expect(recipientBalance).to.be.equal(depositAmount - withdrawFee)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(0n)
   })
 
   it('should reject incorrect ETH value on deposit', async function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -761,7 +646,7 @@ describe('BlackpoolEtherPool', function () {
     // Send wrong msg.value (too little)
     await expect(
       etherPool.transact(args, extData, {
-        value: depositAmount.sub(1),
+        value: depositAmount - 1n,
         gasLimit: 50e6,
       }),
     ).to.be.revertedWith('Incorrect ETH value')
@@ -771,7 +656,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const depositUtxo = new Utxo({ amount: depositAmount })
     await transaction({ etherPool, tree, outputs: [depositUtxo], encryptionKey })
 
@@ -790,7 +675,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -813,7 +698,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -835,7 +720,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -864,13 +749,13 @@ describe('BlackpoolEtherPool', function () {
   it('should reject zero extAmount with positive fee', async function () {
     const { etherPool } = await loadFixture(fixture)
     await expect(
-      etherPool.calculatePublicAmount(0, utils.parseEther('0.01')),
+      etherPool.calculatePublicAmount(0, ethers.parseEther('0.01')),
     ).to.be.revertedWith('ext amount must exceed fee for deposits')
   })
 
   it('should reject deposit where fee equals extAmount', async function () {
     const { etherPool } = await loadFixture(fixture)
-    const amount = utils.parseEther('0.1')
+    const amount = ethers.parseEther('0.1')
     await expect(
       etherPool.calculatePublicAmount(amount, amount),
     ).to.be.revertedWith('ext amount must exceed fee for deposits')
@@ -879,55 +764,55 @@ describe('BlackpoolEtherPool', function () {
   it('should reject deposit where fee exceeds extAmount', async function () {
     const { etherPool } = await loadFixture(fixture)
     await expect(
-      etherPool.calculatePublicAmount(utils.parseEther('0.05'), utils.parseEther('0.1')),
+      etherPool.calculatePublicAmount(ethers.parseEther('0.05'), ethers.parseEther('0.1')),
     ).to.be.revertedWith('ext amount must exceed fee for deposits')
   })
 
   it('should reject withdrawal where fee equals extAmount', async function () {
     const { etherPool } = await loadFixture(fixture)
-    const amount = utils.parseEther('0.1')
+    const amount = ethers.parseEther('0.1')
     await expect(
-      etherPool.calculatePublicAmount(amount.mul(-1), amount),
+      etherPool.calculatePublicAmount(-amount, amount),
     ).to.be.revertedWith('ext amount must exceed fee for deposits')
   })
 
   it('should reject withdrawal where fee exceeds extAmount', async function () {
     const { etherPool } = await loadFixture(fixture)
     await expect(
-      etherPool.calculatePublicAmount(utils.parseEther('-0.05'), utils.parseEther('0.1')),
+      etherPool.calculatePublicAmount(ethers.parseEther('-0.05'), ethers.parseEther('0.1')),
     ).to.be.revertedWith('ext amount must exceed fee for deposits')
   })
 
   it('should accept deposit where extAmount exceeds fee', async function () {
     const { etherPool } = await loadFixture(fixture)
     const result = await etherPool.calculatePublicAmount(
-      utils.parseEther('0.1'),
-      utils.parseEther('0.01'),
+      ethers.parseEther('0.1'),
+      ethers.parseEther('0.01'),
     )
-    expect(result).to.be.equal(utils.parseEther('0.09'))
+    expect(result).to.be.equal(ethers.parseEther('0.09'))
   })
 
   it('should accept withdrawal where extAmount exceeds fee', async function () {
     const { etherPool } = await loadFixture(fixture)
     const fieldSize = await etherPool.FIELD_SIZE()
     const result = await etherPool.calculatePublicAmount(
-      utils.parseEther('-0.1'),
-      utils.parseEther('0.01'),
+      ethers.parseEther('-0.1'),
+      ethers.parseEther('0.01'),
     )
-    expect(result).to.be.equal(fieldSize.sub(utils.parseEther('0.11')))
+    expect(result).to.be.equal(fieldSize - ethers.parseEther('0.11'))
   })
 
   it('should accept deposit with zero fee', async function () {
     const { etherPool } = await loadFixture(fixture)
-    const result = await etherPool.calculatePublicAmount(utils.parseEther('0.1'), 0)
-    expect(result).to.be.equal(utils.parseEther('0.1'))
+    const result = await etherPool.calculatePublicAmount(ethers.parseEther('0.1'), 0)
+    expect(result).to.be.equal(ethers.parseEther('0.1'))
   })
 
   it('should accept withdrawal with zero fee', async function () {
     const { etherPool } = await loadFixture(fixture)
     const fieldSize = await etherPool.FIELD_SIZE()
-    const result = await etherPool.calculatePublicAmount(utils.parseEther('-0.1'), 0)
-    expect(result).to.be.equal(fieldSize.sub(utils.parseEther('0.1')))
+    const result = await etherPool.calculatePublicAmount(ethers.parseEther('-0.1'), 0)
+    expect(result).to.be.equal(fieldSize - ethers.parseEther('0.1'))
   })
 
   it('admin can pause and unpause', async () => {
@@ -961,7 +846,7 @@ describe('BlackpoolEtherPool', function () {
     const { etherPool, admin, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     const { args, extData } = await prepareTransaction({
       tree,
@@ -976,7 +861,7 @@ describe('BlackpoolEtherPool', function () {
         value: depositAmount,
         gasLimit: 50e6,
       }),
-    ).to.be.reverted
+    ).to.revert(ethers)
   })
 
   it('transact works after unpause', async function () {
@@ -986,18 +871,18 @@ describe('BlackpoolEtherPool', function () {
     await etherPool.connect(admin).pause()
     await etherPool.connect(admin).unpause()
 
-    const depositAmount = utils.parseEther('0.05')
+    const depositAmount = ethers.parseEther('0.05')
     const utxo = new Utxo({ amount: depositAmount })
     await transaction({ etherPool, tree, outputs: [utxo], encryptionKey })
 
-    expect(await ethers.provider.getBalance(etherPool.address)).to.be.equal(depositAmount)
+    expect(await ethers.provider.getBalance((await etherPool.getAddress()))).to.be.equal(depositAmount)
   })
 
   it('should be compliant', async function () {
     // basically verifier should check if a commitment and a nullifier hash are on chain
     const { etherPool, encryptionKey } = await loadFixture(fixture)
     const tree = createEmptyTree()
-    const aliceDepositAmount = utils.parseEther('0.07')
+    const aliceDepositAmount = ethers.parseEther('0.07')
     const aliceDepositUtxo = new Utxo({ amount: aliceDepositAmount })
     const [sender] = await ethers.getSigners()
 
@@ -1054,8 +939,8 @@ describe('BlackpoolEtherPool', function () {
       dataForVerifier.nullifier.signature,
     ])
 
-    expect(commitmentV).to.be.equal(commitment)
-    expect(nullifierV).to.be.equal(nullifier)
+    expect(commitmentV.toString()).to.be.equal(commitment.toString())
+    expect(nullifierV.toString()).to.be.equal(nullifier.toString())
     expect(await etherPool.nullifierHashes(toFixedHex(nullifierV))).to.be.equal(true)
     // expect commitmentV present onchain (it will be in NewCommitment events)
 
@@ -1069,28 +954,27 @@ describe('toFixedHex negative numbers', function () {
     const result = toFixedHex(5)
     expect(result).to.have.lengthOf(66) // "0x" + 64 hex chars
     expect(result).to.equal('0x' + '0'.repeat(63) + '5')
-    expect(ethers.BigNumber.from(result).toNumber()).to.equal(5)
+    expect(BigNumber.from(result).toNumber()).to.equal(5)
   })
 
   it('should roundtrip negative numbers through BigNumber', function () {
     const values = [-1, -5, -1000, '-1000000000000000000']
     for (const v of values) {
       const hex = toFixedHex(v)
-      const recovered = ethers.BigNumber.from(hex)
-      expect(recovered.eq(ethers.BigNumber.from(v))).to.be.true
+      const recovered = BigNumber.from(hex)
+      expect(recovered.eq(BigNumber.from(v))).to.be.true
     }
   })
 
   it('should roundtrip negative numbers through toFixedHex', function () {
     const neg = toFixedHex(-5)
-    expect(ethers.BigNumber.from(neg).toNumber()).to.equal(-5)
+    expect(BigNumber.from(neg).toNumber()).to.equal(-5)
   })
 
   it('should produce correct extDataHash with negative extAmount', function () {
-    const { getExtDataHash } = require('../src/utils')
     const extData = {
       recipient: toFixedHex('0x' + '1'.repeat(40), 20),
-      extAmount: toFixedHex(ethers.utils.parseEther('-0.1')),
+      extAmount: toFixedHex(ethers.parseEther('-0.1')),
       feeRecipient: toFixedHex(0, 20),
       fee: toFixedHex(0),
       encryptedOutput1: '0x00',

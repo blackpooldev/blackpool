@@ -1,75 +1,32 @@
-const hre = require('hardhat')
-const { ethers, waffle } = hre
-const { loadFixture } = waffle
-const { expect } = require('chai')
-const { utils } = ethers
+import { expect } from 'chai'
+import { network } from 'hardhat'
+import { MERKLE_TREE_HEIGHT, deploy, deployHasher, deployPoolProxy, dummyProof as dp, dummyExtData as de } from './helpers.js'
 
-const MERKLE_TREE_HEIGHT = 26
-const MAXIMUM_DEPOSIT_AMOUNT = utils.parseEther('1')
-const MINIMUM_AMOUNT = utils.parseEther('0.0005')
+const { ethers, networkHelpers } = await network.create()
+const { loadFixture } = networkHelpers
+
+const MAXIMUM_DEPOSIT_AMOUNT = ethers.parseEther('1')
+const MINIMUM_AMOUNT = ethers.parseEther('0.0005')
+const dummyProof = () => dp(ethers)
+const dummyExtData = (o) => de(ethers, o)
 
 describe('Encrypted output size limit', function () {
-  async function deploy(contractName, ...args) {
-    const Factory = await ethers.getContractFactory(contractName)
-    const instance = await Factory.deploy(...args)
-    return instance.deployed()
-  }
-
   async function fixture() {
-    require('../scripts/compileHasher')
     const [sender, , admin] = await ethers.getSigners()
-    const verifier2 = await deploy('Verifier2')
-    const hasher = await deploy('Hasher')
-
-    const BlackpoolEtherPool = await ethers.getContractFactory('BlackpoolEtherPool')
-    const implementation = await BlackpoolEtherPool.deploy(
-      verifier2.address,
-      MERKLE_TREE_HEIGHT,
-      hasher.address,
+    const verifier2 = await deploy(ethers, 'Verifier2')
+    const hasher = await deployHasher(ethers)
+    const { pool: etherPool } = await deployPoolProxy(
+      ethers,
+      'BlackpoolEtherPool',
+      [await verifier2.getAddress(), MERKLE_TREE_HEIGHT, await hasher.getAddress()],
+      [MAXIMUM_DEPOSIT_AMOUNT, MINIMUM_AMOUNT, admin.address],
     )
-    await implementation.deployed()
-
-    const initData = BlackpoolEtherPool.interface.encodeFunctionData('initialize', [
-      MAXIMUM_DEPOSIT_AMOUNT,
-      MINIMUM_AMOUNT,
-      admin.address,
-    ])
-    const ERC1967Proxy = await ethers.getContractFactory('ERC1967Proxy')
-    const proxy = await ERC1967Proxy.deploy(implementation.address, initData)
-    await proxy.deployed()
-
-    const etherPool = BlackpoolEtherPool.attach(proxy.address)
     return { etherPool, sender, admin }
-  }
-
-  function dummyProof() {
-    return {
-      pA: [0, 0],
-      pB: [[0, 0], [0, 0]],
-      pC: [0, 0],
-      root: ethers.constants.HashZero,
-      inputNullifiers: [ethers.constants.HashZero, ethers.constants.HashZero],
-      outputCommitments: [ethers.constants.HashZero, ethers.constants.HashZero],
-      publicAmount: 0,
-      extDataHash: ethers.constants.HashZero,
-    }
-  }
-
-  function dummyExtData(overrides = {}) {
-    return {
-      recipient: ethers.constants.AddressZero,
-      extAmount: 0,
-      feeRecipient: ethers.constants.AddressZero,
-      fee: 0,
-      encryptedOutput1: '0x',
-      encryptedOutput2: '0x',
-      ...overrides,
-    }
   }
 
   it('MAX_ENCRYPTED_OUTPUT_SIZE is 256', async function () {
     const { etherPool } = await loadFixture(fixture)
-    expect(await etherPool.MAX_ENCRYPTED_OUTPUT_SIZE()).to.equal(256)
+    expect(await etherPool.MAX_ENCRYPTED_OUTPUT_SIZE()).to.equal(256n)
   })
 
   it('rejects encryptedOutput1 exceeding MAX_ENCRYPTED_OUTPUT_SIZE', async function () {

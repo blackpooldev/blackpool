@@ -9,7 +9,7 @@
 // decrypt anything (non-custodial). This file is the single source of truth for the derivation on the backend;
 // frontend/app/lib/burner.ts and cli/bin/blackpool.js implement the identical bytes.
 'use strict'
-const { ethers } = require('ethers')
+const { ethers } = require('ethers5')
 
 const REGISTRY_AUTH_DOMAIN = 'blackpool/registry-auth/v1'
 const REGISTRY_AUTH_MESSAGE =

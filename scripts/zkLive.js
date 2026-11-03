@@ -1,10 +1,10 @@
 // Live check of local proving against mainnet pool state, no funds moved:
 // a fresh account proves a deposit locally and the transaction is SIMULATED (eth_call) from a funded address,
 // so the real on-chain verifier checks the client-made proof and the real root. Also exercises /api/relay guards.
-// Usage: API=http://127.0.0.1:4102 node test/zk-live.test.js <chain> <pool> <fundedFrom> <amount>
+// Usage: API=http://127.0.0.1:4102 node scripts/zkLive.js <chain> <pool> <fundedFrom> <amount>
 const assert = require('assert')
 const fs = require('fs')
-const { ethers } = require('ethers')
+const { ethers } = require('ethers5')
 const { createLocalApi } = require('../cli/lib/localApi')
 const zk = require('../cli/lib/zk')
 

@@ -1,6 +1,5 @@
-/* global network */
 const crypto = require('crypto')
-const { ethers } = require('hardhat')
+const { ethers } = require('ethers5')
 const BigNumber = ethers.BigNumber
 const { poseidon1, poseidon2, poseidon3, poseidon4 } = require('poseidon-lite')
 

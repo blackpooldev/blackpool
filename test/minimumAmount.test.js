@@ -1,70 +1,27 @@
-const hre = require('hardhat')
-const { ethers, waffle } = hre
-const { loadFixture } = waffle
-const { expect } = require('chai')
-const { utils } = ethers
+import { expect } from 'chai'
+import { network } from 'hardhat'
+import { MERKLE_TREE_HEIGHT, deploy, deployHasher, deployPoolProxy, dummyProof as dp, dummyExtData as de } from './helpers.js'
 
-const MERKLE_TREE_HEIGHT = 26
-const MAXIMUM_DEPOSIT_AMOUNT = utils.parseEther('1')
-const MINIMUM_AMOUNT = utils.parseEther('0.0005')
+const { ethers, networkHelpers } = await network.create()
+const { loadFixture } = networkHelpers
+
+const MAXIMUM_DEPOSIT_AMOUNT = ethers.parseEther('1')
+const MINIMUM_AMOUNT = ethers.parseEther('0.0005')
+const dummyProof = () => dp(ethers)
+const dummyExtData = (o) => de(ethers, o)
 
 describe('Minimum amount enforcement', function () {
-  async function deploy(contractName, ...args) {
-    const Factory = await ethers.getContractFactory(contractName)
-    const instance = await Factory.deploy(...args)
-    return instance.deployed()
-  }
-
   async function fixture() {
-    require('../scripts/compileHasher')
     const [sender, , admin] = await ethers.getSigners()
-    const verifier2 = await deploy('Verifier2')
-    const hasher = await deploy('Hasher')
-
-    const BlackpoolEtherPool = await ethers.getContractFactory('BlackpoolEtherPool')
-    const implementation = await BlackpoolEtherPool.deploy(
-      verifier2.address,
-      MERKLE_TREE_HEIGHT,
-      hasher.address,
+    const verifier2 = await deploy(ethers, 'Verifier2')
+    const hasher = await deployHasher(ethers)
+    const { pool: etherPool } = await deployPoolProxy(
+      ethers,
+      'BlackpoolEtherPool',
+      [await verifier2.getAddress(), MERKLE_TREE_HEIGHT, await hasher.getAddress()],
+      [MAXIMUM_DEPOSIT_AMOUNT, MINIMUM_AMOUNT, admin.address],
     )
-    await implementation.deployed()
-
-    const initData = BlackpoolEtherPool.interface.encodeFunctionData('initialize', [
-      MAXIMUM_DEPOSIT_AMOUNT,
-      MINIMUM_AMOUNT,
-      admin.address,
-    ])
-    const ERC1967Proxy = await ethers.getContractFactory('ERC1967Proxy')
-    const proxy = await ERC1967Proxy.deploy(implementation.address, initData)
-    await proxy.deployed()
-
-    const etherPool = BlackpoolEtherPool.attach(proxy.address)
     return { etherPool, sender, admin }
-  }
-
-  function dummyProof() {
-    return {
-      pA: [0, 0],
-      pB: [[0, 0], [0, 0]],
-      pC: [0, 0],
-      root: ethers.constants.HashZero,
-      inputNullifiers: [ethers.constants.HashZero, ethers.constants.HashZero],
-      outputCommitments: [ethers.constants.HashZero, ethers.constants.HashZero],
-      publicAmount: 0,
-      extDataHash: ethers.constants.HashZero,
-    }
-  }
-
-  function dummyExtData(overrides = {}) {
-    return {
-      recipient: ethers.constants.AddressZero,
-      extAmount: 0,
-      feeRecipient: ethers.constants.AddressZero,
-      fee: 0,
-      encryptedOutput1: '0x',
-      encryptedOutput2: '0x',
-      ...overrides,
-    }
   }
 
   it('minimumAmount is initialized to 0.0005 ether', async function () {
@@ -76,7 +33,7 @@ describe('Minimum amount enforcement', function () {
 
   it('rejects deposit below minimumAmount', async function () {
     const { etherPool } = await loadFixture(fixture)
-    const dust = 1
+    const dust = 1n
 
     await expect(
       etherPool.transact(
@@ -89,7 +46,7 @@ describe('Minimum amount enforcement', function () {
 
   it('rejects deposit just below minimumAmount', async function () {
     const { etherPool } = await loadFixture(fixture)
-    const justBelow = MINIMUM_AMOUNT.sub(1)
+    const justBelow = MINIMUM_AMOUNT - 1n
 
     await expect(
       etherPool.transact(
@@ -119,7 +76,7 @@ describe('Minimum amount enforcement', function () {
         dummyProof(),
         dummyExtData({
           extAmount: MINIMUM_AMOUNT,
-          fee: utils.parseEther('0.0002'),
+          fee: ethers.parseEther('0.0002'),
           feeRecipient: '0xDeaD00000000000000000000000000000000BEEf',
         }),
         { value: MINIMUM_AMOUNT, gasLimit: 1e6 },
@@ -136,7 +93,7 @@ describe('Minimum amount enforcement', function () {
       etherPool.transact(
         dummyProof(),
         dummyExtData({
-          extAmount: -1,
+          extAmount: -1n,
           recipient: '0xDeaD00000000000000000000000000000000BEEf',
         }),
         { gasLimit: 1e6 },
@@ -146,13 +103,13 @@ describe('Minimum amount enforcement', function () {
 
   it('rejects withdrawal just below minimumAmount (no fee)', async function () {
     const { etherPool } = await loadFixture(fixture)
-    const justBelow = MINIMUM_AMOUNT.sub(1)
+    const justBelow = MINIMUM_AMOUNT - 1n
 
     await expect(
       etherPool.transact(
         dummyProof(),
         dummyExtData({
-          extAmount: justBelow.mul(-1),
+          extAmount: -justBelow,
           recipient: '0xDeaD00000000000000000000000000000000BEEf',
         }),
         { gasLimit: 1e6 },
@@ -167,7 +124,7 @@ describe('Minimum amount enforcement', function () {
       etherPool.transact(
         dummyProof(),
         dummyExtData({
-          extAmount: MINIMUM_AMOUNT.mul(-1),
+          extAmount: -MINIMUM_AMOUNT,
           recipient: '0xDeaD00000000000000000000000000000000BEEf',
         }),
         { gasLimit: 1e6 },
@@ -177,13 +134,13 @@ describe('Minimum amount enforcement', function () {
 
   it('withdrawal: fee counts toward minimumAmount', async function () {
     const { etherPool } = await loadFixture(fixture)
-    const halfMin = MINIMUM_AMOUNT.div(2)
+    const halfMin = MINIMUM_AMOUNT / 2n
 
     await expect(
       etherPool.transact(
         dummyProof(),
         dummyExtData({
-          extAmount: halfMin.mul(-1),
+          extAmount: -halfMin,
           fee: halfMin,
           recipient: '0xDeaD00000000000000000000000000000000BEEf',
           feeRecipient: '0x000000000000000000000000000000000000dEaD',
@@ -200,8 +157,8 @@ describe('Minimum amount enforcement', function () {
       etherPool.transact(
         dummyProof(),
         dummyExtData({
-          extAmount: -1,
-          fee: MINIMUM_AMOUNT.sub(2),
+          extAmount: -1n,
+          fee: MINIMUM_AMOUNT - 2n,
           recipient: '0xDeaD00000000000000000000000000000000BEEf',
           feeRecipient: '0x000000000000000000000000000000000000dEaD',
         }),
@@ -214,7 +171,7 @@ describe('Minimum amount enforcement', function () {
 
   it('admin can update minimumAmount via configureMinimumAmount', async function () {
     const { etherPool, admin } = await loadFixture(fixture)
-    const newMin = utils.parseEther('0.01')
+    const newMin = ethers.parseEther('0.01')
 
     await etherPool.connect(admin).configureMinimumAmount(newMin)
     expect(await etherPool.minimumAmount()).to.equal(newMin)
@@ -224,18 +181,18 @@ describe('Minimum amount enforcement', function () {
     const { etherPool, sender } = await loadFixture(fixture)
 
     await expect(
-      etherPool.connect(sender).configureMinimumAmount(utils.parseEther('0.01')),
+      etherPool.connect(sender).configureMinimumAmount(ethers.parseEther('0.01')),
     ).to.be.revertedWith('only admin')
   })
 
   it('updated minimumAmount is enforced on deposits', async function () {
     const { etherPool, admin } = await loadFixture(fixture)
-    const newMin = utils.parseEther('0.1')
+    const newMin = ethers.parseEther('0.1')
 
     await etherPool.connect(admin).configureMinimumAmount(newMin)
 
     // 0.05 ETH was above old minimum but below the new one
-    const amount = utils.parseEther('0.05')
+    const amount = ethers.parseEther('0.05')
     await expect(
       etherPool.transact(
         dummyProof(),
@@ -258,14 +215,14 @@ describe('Minimum amount enforcement', function () {
     const { etherPool, admin } = await loadFixture(fixture)
 
     await etherPool.connect(admin).configureMinimumAmount(0)
-    expect(await etherPool.minimumAmount()).to.equal(0)
+    expect(await etherPool.minimumAmount()).to.equal(0n)
 
     // 1 wei deposit should now pass the minimum check
     await expect(
       etherPool.transact(
         dummyProof(),
-        dummyExtData({ extAmount: 1 }),
-        { value: 1, gasLimit: 1e6 },
+        dummyExtData({ extAmount: 1n }),
+        { value: 1n, gasLimit: 1e6 },
       ),
     ).to.be.revertedWith('Invalid merkle root')
   })
@@ -276,7 +233,7 @@ describe('Minimum amount enforcement', function () {
     const { etherPool, admin } = await loadFixture(fixture)
 
     await expect(
-      etherPool.connect(admin).configureMinimumAmount(MAXIMUM_DEPOSIT_AMOUNT.add(1)),
+      etherPool.connect(admin).configureMinimumAmount(MAXIMUM_DEPOSIT_AMOUNT + 1n),
     ).to.be.revertedWith('min exceeds max')
   })
 
@@ -285,7 +242,7 @@ describe('Minimum amount enforcement', function () {
 
     // minimumAmount is 0.0005 ETH, try setting max below that
     await expect(
-      etherPool.connect(admin).configureMaximumDepositAmount(MINIMUM_AMOUNT.sub(1)),
+      etherPool.connect(admin).configureMaximumDepositAmount(MINIMUM_AMOUNT - 1n),
     ).to.be.revertedWith('min exceeds max')
   })
 
@@ -305,8 +262,8 @@ describe('Minimum amount enforcement', function () {
 
   it('to widen range: raise max first, then raise min', async function () {
     const { etherPool, admin } = await loadFixture(fixture)
-    const newMax = utils.parseEther('10')
-    const newMin = utils.parseEther('5')
+    const newMax = ethers.parseEther('10')
+    const newMin = ethers.parseEther('5')
 
     await etherPool.connect(admin).configureMaximumDepositAmount(newMax)
     await etherPool.connect(admin).configureMinimumAmount(newMin)
@@ -317,8 +274,8 @@ describe('Minimum amount enforcement', function () {
 
   it('to narrow range: lower min first, then lower max', async function () {
     const { etherPool, admin } = await loadFixture(fixture)
-    const newMin = utils.parseEther('0.0001')
-    const newMax = utils.parseEther('0.001')
+    const newMin = ethers.parseEther('0.0001')
+    const newMax = ethers.parseEther('0.001')
 
     await etherPool.connect(admin).configureMinimumAmount(newMin)
     await etherPool.connect(admin).configureMaximumDepositAmount(newMax)

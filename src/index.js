@@ -1,5 +1,5 @@
 /* eslint-disable no-console */
-const { ethers } = require('hardhat')
+const { ethers } = require('ethers5')
 const { BigNumber } = ethers
 const { toFixedHex, poseidonHash2, getExtDataHash, FIELD_SIZE } = require('./utils')
 const Utxo = require('./utxo')

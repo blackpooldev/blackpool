@@ -1,7 +1,7 @@
 // Sanity check for the simulation itself: a valid local proof must pass eth_call, a tampered one must revert.
-// Usage: node test/zk-sim-check.js <chain> <pool> <from> <amount>
+// Usage: node scripts/zkSimCheck.js <chain> <pool> <from> <amount>
 const fs = require('fs')
-const { ethers } = require('ethers')
+const { ethers } = require('ethers5')
 const { createLocalApi } = require('../cli/lib/localApi')
 const zk = require('../cli/lib/zk')
 const API = process.env.API || 'https://api.blackpool.cash'

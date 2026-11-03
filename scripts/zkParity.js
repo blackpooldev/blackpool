@@ -1,9 +1,8 @@
 // Parity + proving test for cli/lib/zk.js against the original server implementation (src/*).
-// Run from the repo root: node test/zk-parity.test.js
-process.env.HARDHAT_NETWORK = process.env.HARDHAT_NETWORK || 'hardhat'
+// Run from the repo root: node scripts/zkParity.js
 const assert = require('assert')
 const fs = require('fs')
-const { ethers } = require('ethers')
+const { ethers } = require('ethers5')
 const { MerkleTree } = require('fixed-merkle-tree')
 const snarkjs = require('snarkjs')
 const zk = require('../cli/lib/zk')

@@ -93,12 +93,14 @@ test/         hardhat test-suite (149 tests)
 ## Development
 
 ```bash
-npm install
-npm run compile          # hardhat compile + Poseidon hasher bytecode
-npm test                 # 149 tests, ~2 min (proves real Groth16 proofs)
+npm ci && npm ci --prefix cli
+npm run compile          # Hardhat 3 build + Poseidon hasher bytecode
+npm run validate:upgrades # OpenZeppelin upgrade-safety checks on every pool contract
+npm test                 # 150 tests, ~2 min (proves real Groth16 proofs)
+node scripts/zkParity.js # client-side prover (cli/lib/zk.js) against the reference implementation
 ```
 
-Deploying a pool needs `PRIVATE_KEY` (deployer) and `ADMIN_ADDRESS` in the environment, then for example `npx hardhat run scripts/deployRobinhoodEther.js --network robinhood`. Always compile first. Upgrades go through `scripts/deployUpgrade*.js` and the `.openzeppelin/` manifest.
+Contracts build with Hardhat 3 (`hardhat.config.ts`, solc 0.8.24, optimizer 200, EVM `paris`); the runtime bytecode is identical to the deployed implementations. Deploy a pool with `scripts/deployPool.mjs` and prepare an upgrade with `scripts/prepareUpgrade.mjs` (both `npx hardhat run --network <chain> …`, `DEPLOYER_KEY` in the environment). Pools are administered by a Safe: an upgrade deploys the new implementation and writes a Safe Transaction Builder file under `deploy/safe/` with the `upgradeToAndCall`, which the Safe owners sign.
 
 The relayer API and indexer are operated by Blackpool and are not part of this repository; the frontend and CLI talk to `https://api.blackpool.cash`. The frontend is a static export: `cd frontend && npm run build`.
 

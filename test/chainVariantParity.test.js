@@ -3,12 +3,12 @@
 // family, same pool logic) - they are duplicated per-chain only for folder clarity + Arbiscan/
 // explorer verification metadata. If someone upgrades one chain's pool and forgets the other,
 // the source hashes diverge and this test fails, catching the drift before deploy.
-const fs = require('fs')
-const path = require('path')
-const crypto = require('crypto')
-const { expect } = require('chai')
+import fs from 'node:fs'
+import path from 'node:path'
+import crypto from 'node:crypto'
+import { expect } from 'chai'
+import { ROOT } from './helpers.js'
 
-const ROOT = path.resolve(__dirname, '..')
 const sha = (p) => crypto.createHash('sha256').update(fs.readFileSync(p)).digest('hex')
 
 describe('Chain variant parity (drift guard)', () => {
