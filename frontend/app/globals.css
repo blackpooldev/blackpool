@@ -963,3 +963,24 @@ pre.hl code { display: block; background: none !important; border: 0 !important;
 .hl-f, .hl-fn, .hl-u { color: #5B8DEF; } .hl-s { color: #34C77B; } .hl-n { color: #E9A23B; } .hl-k, .hl-v { color: #8F7BF2; }
 .hl-c, .hl-p, .hl-pun, .hl-o { color: #6E7074; }
 pre.hl-inline code { color: #C9CACC; }
+
+/* app: responsive layer */
+.chain_btn { font: inherit; }
+.user_panel_btn { color: inherit; cursor: pointer; }
+.chain_btn:focus-visible, .user_panel_btn:focus-visible, [role="tab"]:focus-visible { outline: 2px solid #5B8DEF; outline-offset: 2px; }
+.addr_short { display: none; }
+.footer .icon_btn { min-height: 32px; }
+@media (max-width: 560px) {
+  .navbar .brand_text { display: none; }
+  .top_right { gap: 8px !important; }
+  .chain_btn { min-width: 0 !important; padding: 7px 10px !important; }
+  .addr_long { display: none; }
+  .addr_short { display: inline; }
+  .chain_menu { position: fixed !important; top: 60px !important; left: 12px !important; right: 12px !important; width: auto !important; }
+  .user_panel_menu { position: fixed !important; top: 60px !important; right: 12px !important; left: auto !important; max-width: calc(100vw - 24px); }
+  .app_main { padding-top: 104px !important; padding-left: 12px; padding-right: 12px; }
+  .app_main .card { width: 100%; }
+}
+@media (max-width: 374px) {
+  .chain_btn .chain_name { display: none; }
+}

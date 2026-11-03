@@ -23,20 +23,24 @@ export function UserPanel({ address, onDisconnect, chainLabel = 'Base' }: { addr
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <div
+      <button
+        type="button"
         className="user_panel_btn"
         style={{ cursor: 'pointer', gap: 6, padding: '5px 10px' }}
         onClick={() => setOpen(o => !o)}
         title="Account"
+        aria-haspopup="menu"
+        aria-expanded={open}
       >
         <span style={{ color: '#91ffa3' }}>●</span>
-        <span>{short}</span>
+        <span className="addr_long">{short}</span>
+        <span className="addr_short">{`${address.slice(0, 4)}…${address.slice(-4)}`}</span>
         <div style={{ width: 14, height: 14, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s', display: 'flex' }}>
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.7 14.7a1 1 0 01-1.4 0l-5-5a1 1 0 011.4-1.4L12 12.6l4.3-4.3a1 1 0 011.4 1.4l-5 5z" /></svg>
         </div>
-      </div>
+      </button>
       {open && (
-        <div style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, background: '#171b26', border: '1px solid #2a3242', borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,.6)', zIndex: 1000, minWidth: 210, overflow: 'hidden' }}>
+        <div className="user_panel_menu" style={{ position: 'absolute', top: '100%', right: 0, marginTop: 6, background: '#171b26', border: '1px solid #2a3242', borderRadius: 12, boxShadow: '0 10px 30px rgba(0,0,0,.6)', zIndex: 1000, minWidth: 210, overflow: 'hidden' }}>
           <div style={{ padding: '12px 14px', borderBottom: '1px solid #232b3a' }}>
             <div style={{ fontSize: 11, color: '#7b8496', marginBottom: 3, textTransform: 'uppercase', letterSpacing: '.04em' }}>Connected</div>
             <div style={{ fontSize: 14, color: '#fff', fontFamily: 'monospace' }}>{short}</div>

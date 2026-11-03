@@ -1455,7 +1455,7 @@ export default function Home() {
       <div className="navbar" style={{ position: 'fixed' }}>
         <a href="https://blackpool.cash/" style={{ fontWeight: 700, fontSize: 20, color: 'white', letterSpacing: '0.5px', textDecoration: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }} title="BLACKPOOL home">
           <img src="/mark.svg" alt="" style={{ width: 24, height: 24, flexShrink: 0 }} />
-          <span>Blackpool</span>
+          <span className="brand_text">Blackpool</span>
         </a>
         <div className="top_right">
           <ChainSwitcher />
@@ -1472,16 +1472,16 @@ export default function Home() {
       </div>
 
       {/* ===== MAIN ===== */}
-      <main style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, paddingTop: 130, paddingBottom: 40, position: 'relative', zIndex: 1 }}>
-        <div className="card" style={{ position: 'relative', minWidth: 350 }}>
+      <main className="app_main" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flex: 1, paddingTop: 130, paddingBottom: 40, position: 'relative', zIndex: 1 }}>
+        <div className="card" style={{ position: 'relative', minWidth: 'min(350px, 100%)' }}>
           {/* Tabs floating above card */}
           <div style={{ position: 'absolute', top: -41, left: 0 }}>
-            <div style={{ display: 'flex', gap: 5, paddingLeft: 20, alignItems: 'flex-end' }}>
-              <div className={tab === 'send' ? 'withdraw_card_head_active' : 'withdraw_card_head_inactive'} style={{ cursor: 'pointer' }} onClick={() => setTab('send')}> Send Privately</div>
+            <div role="tablist" aria-label="Action" className="app_tabs" style={{ display: 'flex', gap: 5, paddingLeft: 20, alignItems: 'flex-end' }}>
+              <div role="tab" tabIndex={0} aria-selected={tab === 'send'} className={tab === 'send' ? 'withdraw_card_head_active' : 'withdraw_card_head_inactive'} style={{ cursor: 'pointer' }} onClick={() => setTab('send')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTab('send') } }}>Send Privately</div>
               {isSwapSupported(activeChain) && (
-                <div className={tab === 'swap' ? 'withdraw_card_head_active' : 'withdraw_card_head_inactive'} style={{ cursor: 'pointer' }} onClick={() => setTab('swap')}>Swap</div>
+                <div role="tab" tabIndex={0} aria-selected={tab === 'swap'} className={tab === 'swap' ? 'withdraw_card_head_active' : 'withdraw_card_head_inactive'} style={{ cursor: 'pointer' }} onClick={() => setTab('swap')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTab('swap') } }}>Swap</div>
               )}
-              <div className={tab === 'bridge' ? 'withdraw_card_head_active' : 'withdraw_card_head_inactive'} style={{ cursor: 'pointer' }} onClick={() => setTab('bridge')}>Private bridge</div>
+              <div role="tab" tabIndex={0} aria-selected={tab === 'bridge'} className={tab === 'bridge' ? 'withdraw_card_head_active' : 'withdraw_card_head_inactive'} style={{ cursor: 'pointer' }} onClick={() => setTab('bridge')} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); setTab('bridge') } }}>Private bridge</div>
             </div>
           </div>
 
@@ -1697,7 +1697,7 @@ export default function Home() {
       {/* ===== FOOTER ===== */}
       <div className="footer" style={{ position: 'relative', zIndex: 1 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, justifyContent: 'center', flexWrap: 'wrap' }}>
-          <a href="https://docs.blackpool.cash" target="_blank" rel="noopener noreferrer" aria-label="BLACKPOOL documentation">
+          <a href="/docs" aria-label="Blackpool documentation">
             <div className="icon_btn">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }} aria-hidden="true">
                 <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
@@ -1715,12 +1715,30 @@ export default function Home() {
               <span>Explorer</span>
             </div>
           </a>
-          <a href="https://github.com/blackpooldev" target="_blank" rel="noopener noreferrer" aria-label="BLACKPOOL on GitHub">
+          <a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer" aria-label="Blackpool on GitHub">
             <div className="icon_btn">
               <svg width="14" height="14" viewBox="0 0 16 16" fill="currentColor" style={{ marginRight: 4 }} aria-hidden="true">
                 <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0 0 16 8c0-4.42-3.58-8-8-8z"/>
               </svg>
               <span>GitHub</span>
+            </div>
+          </a>
+          <a href="/recover" aria-label="Recover stuck funds">
+            <div className="icon_btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }} aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7" /><polyline points="3 3 3 9 9 9" /></svg>
+              <span>Recover</span>
+            </div>
+          </a>
+          <a href="/agents" aria-label="Blackpool for AI agents">
+            <div className="icon_btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }} aria-hidden="true"><polyline points="4 17 10 11 4 5" /><line x1="12" y1="19" x2="20" y2="19" /></svg>
+              <span>Agents</span>
+            </div>
+          </a>
+          <a href="/status" aria-label="Service status">
+            <div className="icon_btn">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 4 }} aria-hidden="true"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+              <span>Status</span>
             </div>
           </a>
           <a href="/analytics" aria-label="Blackpool on-chain analytics">

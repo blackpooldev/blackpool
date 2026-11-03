@@ -7,7 +7,7 @@ const CHAINS = [
   { id: 4663, name: 'Robinhood', logo: '/token_logos/robinhood.png?v=2', full: true },
   { id: 8453, name: 'Base', logo: '/token_logos/base.png', full: true },
   { id: 42161, name: 'Arbitrum', logo: '/token_logos/arbitrum.png', full: true },
-  { id: 56, name: 'BSC', logo: '/token_logos/bsc.png', full: true },
+  { id: 56, name: 'BNB Chain', logo: '/token_logos/bsc.png', full: true },
 ]
 
 // chain IDs that have private pools (can shield/withdraw/swap). Others are bridge-only.
@@ -38,21 +38,26 @@ export function ChainSwitcher() {
 
   return (
     <div ref={ref} style={{ position: 'relative' }}>
-      <div
+      <button
+        type="button"
+        className="chain_btn"
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        aria-label={`Network: ${active.name}`}
         onClick={() => setOpen(o => !o)}
         style={{ minWidth: 100, padding: '7px 14px', border: `1px solid ${wrongForPool ? '#b4884d' : 'var(--color-border)'}`, borderRadius: 'var(--radius-pill)', cursor: 'pointer', fontSize: 12, fontFamily: 'var(--font-mono)', textTransform: 'uppercase', letterSpacing: '-0.02em', background: 'var(--color-bg3)', color: 'var(--color-fg2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, userSelect: 'none' }}
         title={wrongForPool ? 'Switch to a pool chain (Robinhood, Base, Arbitrum, BNB) to shield or withdraw' : 'Network'}
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {active.logo ? <img src={active.logo} style={{ width: 16, height: 16, flexShrink: 0 }} alt="" /> : <span style={{ width: 8, height: 8, borderRadius: 4, background: '#b4884d', flexShrink: 0 }} />}
-          <span>{isPending ? 'Switching...' : active.name}</span>
+          <span className="chain_name">{isPending ? 'Switching...' : active.name}</span>
         </span>
         <div style={{ width: 16, height: 16, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.7 14.7a1 1 0 01-1.4 0l-5-5a1 1 0 011.4-1.4L12 12.6l4.3-4.3a1 1 0 011.4 1.4l-5 5z" /></svg>
         </div>
-      </div>
+      </button>
       {open && (
-        <div style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: 'var(--color-bg1)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', boxShadow: '0 8px 24px rgba(0,0,31,.6)', zIndex: 99, padding: 6, minWidth: 190 }}>
+        <div className="chain_menu" style={{ position: 'absolute', top: '100%', left: 0, marginTop: 6, background: 'var(--color-bg1)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', boxShadow: '0 8px 24px rgba(0,0,31,.6)', zIndex: 99, padding: 6, minWidth: 190 }}>
           {CHAINS.map(c => {
             const isActive = c.id === chainId
             return (
