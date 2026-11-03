@@ -7,7 +7,6 @@ import {
   useConnections,
   useDisconnect,
   useSignMessage,
-  useSwitchChain,
   useReadContract,
   useWalletClient
 } from 'wagmi';
@@ -19,6 +18,7 @@ import { ChainSwitcher } from "../components/ChainSwitcher";
 import { DepositModal } from "../components/DepositModal";
 import { LightRays } from "../components/LightRays";
 import { StepperModal, type Step } from "../components/Stepper";
+import { switchWalletChain } from "../lib/walletChain";
 import { BridgeWatch } from "../components/BridgeWatch";
 import { TxResult, explorerHomeUrl, explorerName } from "../components/TxResult";
 import { SlippageControl } from "../components/Slippage";
@@ -399,14 +399,13 @@ export default function Home() {
     : (stableRaw !== undefined && stableDecimals !== undefined ? fmt3(formatUnits(stableRaw, stableDecimals)) : undefined)
 
   const { data: walletClient } = useWalletClient()
-  const { switchChainAsync } = useSwitchChain()
   // Wallet on a chain without pools (Ethereum mainnet, a testnet, …): the UI would otherwise show the default chain
   // while every signed tx goes to the wrong network. Ask the wallet to switch once per connection; if the user
   // declines, keep a banner with a retry button and block wallet-signed txs until it matches.
   const wrongNetwork = isConnected && !!walletChainId && !CHAIN_ID_TO_KEY[walletChainId]
   const autoSwitchedRef = useRef<string | null>(null)
   const switchTo = async (chainId: number) => {
-    try { await switchChainAsync({ chainId }); return true } catch { return false }
+    try { await switchWalletChain(connector, chainId); return true } catch { return false }
   }
   useEffect(() => {
     if (!wrongNetwork || !address) return
@@ -894,7 +893,7 @@ export default function Home() {
             const st = await apiGet(`/api/intent-status?depositAddress=${res.depositAddress}`)
             if (st.status === 'SUCCESS') {
               setStepper({ steps: bridgeSteps, active: bridgeSteps.length, error: null })
-              setStatus(`Bridged! Recipient received ${st.amountOut || res.amountOut} ${outSym} on ${ASSET_LABELS[toAsset]?.chain}`)
+              setStatus('') // the Recent bridges card above shows the delivered amount
               // capture destination-chain tx hash if solver returned one (varies by intent provider)
               const destHash = st.destTxHash || st.destinationTx || st.dstTxHash || st.outboundTxHash
               const destChain = ASSET_LABELS[toAsset]?.chain

@@ -3,8 +3,8 @@ import { useEffect, useState } from 'react'
 import { createPortal } from 'react-dom'
 
 // Themed progress stepper (modal overlay) for send/swap/bridge.
-// CSS animasi: stepper-fill (garis ngisi), step-completed (centang), step-pulse (step aktif).
-// Nyambung tema BLACKPOOL (dark #10141f, accent #91ffa3 hijau + #4f9cff biru).
+// Done steps pop in with a check, the connector fills, and the running step shows the active indicator below
+// (motion spec: Figma file "Blackpool — Stepper motion"). prefers-reduced-motion keeps it static.
 
 export interface Step { id: number | string; title: string; sub?: string }
 
@@ -27,6 +27,11 @@ export function StepperModal({ steps, activeStep, error, info, onClose, onDismis
         @keyframes bp-fill { from{height:0} to{height:100%} }
         @keyframes bp-pop { 0%{transform:scale(.5);opacity:0} 60%{transform:scale(1.15)} 100%{transform:scale(1);opacity:1} }
         @keyframes bp-fade { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+        @keyframes bp-spin { to{transform:rotate(360deg)} }
+        @keyframes bp-breathe { 0%,100%{transform:scale(.8);opacity:.7} 50%{transform:scale(1.15);opacity:1} }
+        @keyframes bp-ripple { 0%{transform:scale(1);opacity:.55} 100%{transform:scale(1.7);opacity:0} }
+        @keyframes bp-spark { 0%{left:0;opacity:0} 15%{opacity:1} 85%{opacity:1} 100%{left:calc(100% - 6px);opacity:0} }
+        @media (prefers-reduced-motion: reduce) { .bp-motion { animation: none !important } .bp-spark { display: none } }
       `}</style>
       <div style={{ width: '100%', maxWidth: 440, background: 'var(--color-bg1)', border: '1px solid var(--color-border)', borderRadius: 'var(--radius-card)', boxShadow: '0 12px 40px rgba(0,0,31,.6)', padding: '24px 22px 20px', animation: 'bp-fade .25s ease', boxSizing: 'border-box' }}>
         <div style={{ fontFamily: 'var(--font-display)', fontWeight: 600, fontSize: 18, color: 'var(--color-fg1)', marginBottom: 4 }}>
@@ -43,24 +48,30 @@ export function StepperModal({ steps, activeStep, error, info, onClose, onDismis
             const isActive = i === activeStep && !error && !done && !info
             const isError = i === activeStep && !!error
             const isLast = i === steps.length - 1
-            const dotBg = isDone ? 'var(--color-accent)' : isError ? '#ff6b6b' : isActive ? 'var(--color-primary)' : 'var(--color-bg3)'
+            const feedsActive = i + 1 === activeStep && !error && !done && !info // connector runs into the running step
+            const dotBg = isDone ? 'var(--color-accent)' : isError ? '#ff6b6b' : isActive ? 'transparent' : 'var(--color-bg3)'
             const dotColor = (isDone || isActive) ? 'var(--color-on-primary)' : isError ? '#0a0c10' : 'var(--color-fg2)'
             return (
               <div key={s.id} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flex: 1, minWidth: 0, position: 'relative' }}>
                 {/* connector line to next step (drawn from this dot's right edge) */}
                 {!isLast && (
                   <div style={{ position: 'absolute', top: 13, left: 'calc(50% + 16px)', right: 'calc(-50% + 16px)', height: 2, background: 'var(--color-bg4)', borderRadius: 1, overflow: 'hidden' }}>
-                    <div style={{ position: 'absolute', inset: 0, width: isDone ? '100%' : '0%', background: 'var(--color-accent)', transition: 'width .4s ease' }} />
+                    <div style={{ position: 'absolute', inset: 0, width: isDone ? '100%' : '0%', background: feedsActive ? 'linear-gradient(90deg, var(--color-accent), rgba(52,199,123,.3))' : 'var(--color-accent)', transition: 'width .4s ease' }} />
+                  </div>
+                )}
+                {!isLast && feedsActive && (
+                  <div className="bp-spark" aria-hidden style={{ position: 'absolute', top: 11, left: 'calc(50% + 16px)', right: 'calc(-50% + 16px)', height: 6, pointerEvents: 'none' }}>
+                    <span className="bp-motion" style={{ position: 'absolute', top: 0, width: 6, height: 6, borderRadius: 3, background: '#91ffa3', boxShadow: '0 0 8px rgba(52,199,123,.9)', animation: 'bp-spark 1.2s ease-in-out infinite' }} />
                   </div>
                 )}
                 {/* dot */}
                 <div style={{
                   width: 26, height: 26, minWidth: 26, borderRadius: 13, background: dotBg, color: dotColor,
                   display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, zIndex: 1,
-                  transition: 'background .3s', animation: isActive ? 'bp-step-pulse 1.5s infinite' : isDone || isError ? 'bp-pop .3s ease' : 'none',
+                  transition: 'background .3s', animation: isDone || isError ? 'bp-pop .3s ease' : 'none',
                   border: (!isDone && !isActive && !isError) ? '1px solid var(--color-border)' : 'none',
                 }}>
-                  {isDone ? '✓' : isError ? '!' : isActive ? <Spinner /> : i + 1}
+                  {isDone ? '✓' : isError ? '!' : isActive ? <ActiveIndicator /> : i + 1}
                 </div>
                 {/* label under dot */}
                 <div style={{ fontFamily: 'var(--font-mono)', fontSize: 10.5, textTransform: 'uppercase', letterSpacing: '-0.02em', fontWeight: isActive ? 600 : 500, marginTop: 8, textAlign: 'center', lineHeight: 1.25, padding: '0 3px', color: isDone ? 'var(--color-accent)' : isError ? '#ff6b6b' : isActive ? 'var(--color-fg1)' : 'var(--color-muted)' }}>{s.title}</div>
@@ -103,10 +114,18 @@ export function StepperModal({ steps, activeStep, error, info, onClose, onDismis
   )
 }
 
-function Spinner() {
+// Running step: faint track ring, green arc sweeping clockwise, breathing core and a ripple halo.
+function ActiveIndicator() {
+  const fill: React.CSSProperties = { position: 'absolute', inset: 0, borderRadius: '50%' }
   return (
-    <div style={{ width: 13, height: 13, border: '2px solid rgba(255,255,255,.35)', borderTopColor: '#fff', borderRadius: '50%', animation: 'bp-spin .7s linear infinite' }}>
-      <style>{`@keyframes bp-spin{to{transform:rotate(360deg)}}`}</style>
+    <div role="img" aria-label="In progress" style={{ position: 'relative', width: 26, height: 26 }}>
+      <span className="bp-motion" style={{ ...fill, border: '1.5px solid rgba(52,199,123,.55)', animation: 'bp-ripple 1.2s ease-out infinite' }} />
+      <span style={{ ...fill, background: 'rgba(52,199,123,.08)', border: '2px solid rgba(52,199,123,.18)' }} />
+      <span className="bp-motion" style={{ ...fill, animation: 'bp-spin 1.2s linear infinite' }}>
+        <span style={{ ...fill, background: 'conic-gradient(rgba(145,255,163,0) 0deg 100deg, #91ffa3 360deg)', WebkitMask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))', mask: 'radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px))' }} />
+        <span style={{ position: 'absolute', top: 0, left: '50%', width: 2, height: 2, marginLeft: -1, borderRadius: 1, background: '#91ffa3' }} />
+      </span>
+      <span className="bp-motion" style={{ position: 'absolute', top: 9, left: 9, width: 8, height: 8, borderRadius: 4, background: '#91ffa3', boxShadow: '0 0 10px rgba(52,199,123,.8)', animation: 'bp-breathe 1.2s ease-in-out infinite' }} />
     </div>
   )
 }
