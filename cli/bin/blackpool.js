@@ -697,7 +697,7 @@ async function cmdDeposit(args) {
   info('preparing deposit (the proof is generated on this machine)...')
 
   const prep = await apiPost('/api/deposit/prepare', {
-    signature: sig, address: wallet.address, amount: n, pool, chain,
+    signature: sig, address: wallet.address, amount: String(amount), pool, chain,
   }, { timeoutMs: 180_000 })
 
   // ERC pool with insufficient allowance -> approve first
@@ -951,7 +951,7 @@ async function cmdBridge(args) {
   info('quote + groth16 proof + private withdraw to solver... can take ~1-2 min')
 
   const res = await apiPost('/api/swap', {
-    signature: sig, fromAsset, toAsset, amount: n, recipient,
+    signature: sig, fromAsset, toAsset, amount: String(amount), recipient,
     refundTo: wallet.address, // Solana/XRP recipients: solver refunds (origin chain) come back to this wallet
   }, { timeoutMs: 180_000 })
 
@@ -1159,7 +1159,7 @@ async function cmdSwap(args) {
   const wp = await apiPost('/api/swap-private', {
     signature: sig, chain, pool: from,
     fromAsset: chain === 'base' ? (isEthOrigin ? 'base_eth' : 'base_usdc') : undefined,
-    amount: n, burnerAddress: burner.address,
+    amount: String(amount), burnerAddress: burner.address,
   }, { timeoutMs: 180_000 })
   info(`withdraw tx: ${explorerTx(chain, wp.txHash)}`)
 
@@ -1411,7 +1411,7 @@ async function cmdSend(args) {
   info('this can take ~30-90 seconds - you pay no gas.')
 
   const res = await apiPost('/api/withdraw', {
-    signature: sig, amount: n, recipient, pool, chain
+    signature: sig, amount: String(amount), recipient, pool, chain
   }, { timeoutMs: 180_000 })
 
   log('')
