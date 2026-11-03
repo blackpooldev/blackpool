@@ -9,12 +9,12 @@ import { registryAuthSigFromSignIn } from '../lib/burner'
 
 // SELF-SERVE emergency recovery for funds stranded on a one-time swap burner.
 //
-// Trust model: the user signs the BLACKPOOL message IN THEIR OWN BROWSER. That signature never leaves
-// the page — it is used locally to DERIVE the burner keys (deterministic from signature + nonce),
-// then this page sweeps whatever each burner holds DIRECTLY to the user's public wallet. No private
-// key or signature is ever sent to any server. This is the same derive+sweep logic the app's auto-
-// recovery uses, but it bypasses the reshield-to-pool path entirely (funds go to the public wallet,
-// which the user can re-shield in the app afterward). Works from the signature alone.
+// Trust model: the user signs the Blackpool message IN THEIR OWN BROWSER. That signature never leaves
+// the page. It derives the registry-auth key (to list this account's encrypted burner rows) and the AES key
+// that decrypts each burner's private key locally; this page then sweeps whatever each burner holds
+// DIRECTLY to the user's public wallet. No private key or signature is ever sent to any server. Unlike the
+// app's automatic recovery it skips the re-shield step (funds land in the public wallet and can be shielded
+// again in the app). It also lists every cross-chain bridge with its live status. Works from the signature alone.
 
 const SIGN_MESSAGE = 'Welcome to Blackpool\n\nSign this message to access your private account.\n\n- Gas free: no transaction is sent\n- Your private account keys are derived from this signature\n- It cannot move funds from your wallet or approve spending\n- Only sign it on blackpool.cash or the Blackpool CLI'
 // byte-identical to backend src/burnerRegistry.js + app/lib/burner.ts
@@ -262,7 +262,7 @@ export default function Recover() {
         }
       }
 
-      if (!foundAny) add('\n✅ Nothing stranded — all your burner wallets are empty on both chains.')
+      if (!foundAny) add('\n✅ Nothing stranded — all your burner wallets are empty on every chain.')
       else if (sweptAny) add('\n✅ Done. Recovered funds are now in your public wallet. Re-shield them in the app if you want them private again.')
       else add('\n⚠️ Funds were found but could not be swept (see notes above). Reach out and we\'ll help.')
       setDone(true)
