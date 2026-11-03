@@ -134,8 +134,15 @@ Private payment to any EVM address on the same chain. `amount` is what leaves yo
 ```
 To make the recipient receive exactly `X`, send `(X + flat) / (1 − 0.0035)` rounded up (see §5).
 
+`amount` can be `max`: the whole private balance of `--pool`, of every pool on the chain when `--pool` is omitted, or of every pool on every chain with `--chain all`. A send spends at most two notes, so a balance spread over more notes goes out in several sends; a balance at or below twice its fee is left as dust.
+```json
+{"ok":true,"command":"send","recipient":"0x…","amount":"max","sends":[{"chain":"bsc","pool":"usdt","amount":"12.253307487806713664",
+ "received":"11.7104…","fee":"0.5428…","txHash":"0x…"}],"received":{"USDT":"11.7104…"},"dust":[],"errors":[]}
+```
+
 ### `swap <amount> --from P [--chain C] [--slippage BPS]`
 Private same-chain swap between the chain's native pool and stablecoin pool; the output is re-shielded into your private balance. `--slippage` in basis points, default `100` (1%). No gas needed. ~1–3 min.
+`amount` can be `max`: the most one swap can move (its two largest notes). If the balance is spread over more notes, the output says what is left; run `swap max` again for the rest.
 ```json
 {"ok":true,"command":"swap","chain":"base","from":"eth","amount":0.01,"received":"22.41",
  "symbol":"USDC","txHash":"0x…","explorer":"https://basescan.org/tx/0x…","privateBalance":"36.375"}
@@ -144,6 +151,7 @@ If it fails half-way, funds sit on a registered burner: run `recover`.
 
 ### `bridge <dest-asset> <recipient> <amount> --from ORIGIN [--no-wait]`
 Private cross-chain transfer through NEAR Intents. `ORIGIN` is the private pool paying (default `base_usdc`); `dest-asset` and recipient format are listed in §6. The withdrawal is private; the solver delivers on the destination chain. Without `--no-wait` the CLI polls up to 6 minutes.
+`amount` can be `max`: the most one bridge can move from the `--from` pool (its two largest notes); the route minimum still applies.
 ```json
 {"ok":true,"command":"bridge","from":"base_usdc","to":"sol_usdc","recipient":"7Gx4…kQ2m","amount":10,
  "amountOutQuote":"8.91","withdrawTx":"0x…","depositAddress":"0x…","statusUrl":"https://…",

@@ -20,7 +20,7 @@ const SUPPORTED = ['2025-06-18', '2025-03-26', '2024-11-05']
 
 const CHAIN = { type: 'string', enum: ['base', 'robinhood', 'arbitrum', 'bsc'], description: 'Chain. Default base.' }
 const POOL = { type: 'string', description: 'Pool on that chain: eth|usdc (base, arbitrum), eth|usdg (robinhood), bnb|usdc|usdt (bsc). Default: the chain\'s stablecoin pool.' }
-const AMOUNT = { type: 'string', pattern: '^[0-9]+(\\.[0-9]+)?$', description: 'Decimal amount in token units, e.g. "10" or "0.25". Never wei.' }
+const AMOUNT = { type: 'string', pattern: '^([0-9]+(\\.[0-9]+)?|max)$', description: 'Decimal amount in token units, e.g. "10" or "0.25", or "max" (send: the whole pool balance; swap/bridge: the most one operation can move). Never wei.' }
 
 const TOOLS = [
   {
@@ -43,8 +43,8 @@ const TOOLS = [
   },
   {
     name: 'blackpool_send', title: 'Private send', destructive: true,
-    description: 'Pay any EVM address privately from the private balance. The relayer pays gas; the recipient receives amount minus the fee (flat + 0.35%). Takes 30-90 s. Never retry after a timeout without checking blackpool_balance.',
-    inputSchema: { type: 'object', properties: { recipient: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$' }, amount: AMOUNT, pool: POOL, chain: CHAIN }, required: ['recipient', 'amount'], additionalProperties: false },
+    description: 'Pay any EVM address privately from the private balance. The relayer pays gas; the recipient receives amount minus the fee (flat + 0.35%). amount "max" sends the whole balance of the pool (or of every pool when pool is omitted), splitting across several sends when needed and leaving dust untouched. Takes 30-90 s per send. Never retry after a timeout without checking blackpool_balance.',
+    inputSchema: { type: 'object', properties: { recipient: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$' }, amount: { type: 'string', pattern: '^([0-9]+(\\.[0-9]+)?|max)$', description: 'Decimal amount in token units, e.g. "10" or "0.25", or "max" for the whole private balance. Never wei.' }, pool: POOL, chain: CHAIN }, required: ['recipient', 'amount'], additionalProperties: false },
     args: (a) => ['send', a.recipient, String(a.amount), ...opt('--pool', a.pool), ...opt('--chain', a.chain)],
   },
   {

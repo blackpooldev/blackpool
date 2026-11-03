@@ -5,7 +5,7 @@
  * Usage:
  *   blackpool login              -- sign BLACKPOOL message, cache signature for this wallet
  *   blackpool balance [--pool p] -- print private balance
- *   blackpool send <to> <amount> -- send privately to an address
+ *   blackpool send <to> <amount> -- send privately to an address (amount "max" = the whole private balance)
  *
  * Auth: BLACKPOOL_KEY env var (agent private key, hex). No mnemonic support in MVP.
  * Config: ~/.blackpool/config.json stores cached signatures (per address).
@@ -909,6 +909,11 @@ const BRIDGE_ORIGINS = {
 // blackpool bridge <destAssetKey> <recipient> <amount> [--from ...] [--chain ...]
 // Every destination uses the NEAR Intents 1Click flow (/api/swap + poll) — Robinhood included.
 async function cmdBridge(args) {
+  if (/^(max|all)$/i.test(String(args[2] || ''))) {
+    const o = BRIDGE_ORIGINS[getFlag(args, '--from') || 'base_usdc']
+    if (!o) fail(`unknown --from "${getFlag(args, '--from')}" (1Click origins: ${Object.keys(BRIDGE_ORIGINS).join(', ')})`)
+    args = [...args]; args[2] = await resolveMaxAmount(o.chain, o.pool, 'bridge')
+  }
   const toAsset = args[0]
   const recipient = args[1]
   const amount = args[2]
@@ -1115,6 +1120,11 @@ async function cmdRecover(args) {
 }
 
 async function cmdSwap(args) {
+  if (/^(max|all)$/i.test(String(args[0] || ''))) {
+    const fromPool = getFlag(args, '--from')
+    if (!fromPool) fail('usage: blackpool swap max --from <pool> [--chain C]', 2)
+    args = [...args]; args[0] = await resolveMaxAmount(resolveChain(args), fromPool, 'swap')
+  }
   const chain = resolveChain(args)
   const C = CHAINS[chain]
   const amount = args[0]
@@ -1387,6 +1397,7 @@ async function cmdAssets() {
 }
 
 async function cmdSend(args) {
+  if (/^(max|all)$/i.test(String(args[1] || ''))) return cmdSendMax(args)
   const chain = resolveChain(args)
   const C = CHAINS[chain]
   const recipient = args[0]
@@ -1422,6 +1433,77 @@ async function cmdSend(args) {
   result({ chain, pool, recipient, amount: n, received: res.recipientReceives, fee: res.fee, symbol: res.symbol, txHash: res.txHash, explorer: explorerTx(chain, res.txHash) })
 }
 
+// "max" for swap/bridge: the most one operation can spend (its two largest notes), as an exact decimal string.
+async function resolveMaxAmount(chain, pool, flow) {
+  if (!CHAINS[chain] || !CHAINS[chain].pools[pool]) fail(`unknown pool "${pool}" on ${CHAINS[chain] ? CHAINS[chain].label : chain}`)
+  const P = CHAINS[chain].pools[pool]
+  const sig = await ensureSignature(getWallet())
+  const bal = await apiPost('/api/balance', { signature: sig, pool, chain }, { timeoutMs: 120_000 })
+  const notes = (bal.utxos || []).map((u) => ethers.utils.parseUnits(String(u), P.decimals)).sort((a, b) => (b.gt(a) ? 1 : b.lt(a) ? -1 : 0))
+  if (!notes.length) fail(`no private ${P.symbol} on ${CHAINS[chain].label}`)
+  const spend = notes.slice(0, 2).reduce((s, n) => s.add(n), ethers.BigNumber.from(0))
+  const total = notes.reduce((s, n) => s.add(n), ethers.BigNumber.from(0))
+  const spendStr = ethers.utils.formatUnits(spend, P.decimals)
+  if (Number(spendStr) < minTxFor(chain, pool).min) fail(`private ${P.symbol} on ${CHAINS[chain].label} is ${ethers.utils.formatUnits(total, P.decimals)}, below the minimum ${flow}`)
+  info(`max: ${spendStr} ${P.symbol}` + (notes.length > 2 ? ` (of ${ethers.utils.formatUnits(total, P.decimals)} across ${notes.length} notes; run ${flow} max again for the rest)` : ''))
+  return spendStr
+}
+
+// send <recipient> max: empty one pool, every pool of a chain, or every pool everywhere into one address.
+async function cmdSendMax(args) {
+  const recipient = args[0]
+  if (!/^0x[a-fA-F0-9]{40}$/.test(String(recipient || ''))) fail(`invalid recipient address: ${recipient}`, 2)
+  const rawChain = (getFlag(args, '--chain') || 'base').toLowerCase()
+  const chains = rawChain === 'all' ? Object.keys(CHAINS) : [resolveChain(args)]
+  const poolFlag = (getFlag(args, '--pool') || 'all').toLowerCase()
+  if (rawChain === 'all' && poolFlag !== 'all') fail('with --chain all, use --pool all (pool names differ per chain)', 2)
+  if (poolFlag !== 'all' && !poolsForChain(chains[0]).includes(poolFlag)) fail(`unknown pool "${poolFlag}" on ${CHAINS[chains[0]].label} (supported: ${poolsForChain(chains[0]).join(', ')})`)
+
+  const wallet = getWallet()
+  const sig = await ensureSignature(wallet)
+  const sends = [], dust = [], errors = []
+  log('')
+  log(color(`  sending the whole private balance to ${recipient}`, c.bold))
+  for (const chain of chains) {
+    const pools = poolFlag === 'all' ? poolsForChain(chain) : [poolFlag]
+    for (const pool of pools) {
+      const P = CHAINS[chain].pools[pool]
+      const tag = `${CHAINS[chain].label} ${P.symbol}`
+      for (let round = 0; round < 12; round++) {
+        let bal
+        try { bal = await apiPost('/api/balance', { signature: sig, pool, chain }, { timeoutMs: 120_000 }) }
+        catch (e) { errors.push({ chain, pool, error: cleanErr(e) }); info(`${tag}: could not read the balance (${cleanErr(e)})`); break }
+        const notes = (bal.utxos || []).map((u) => ethers.utils.parseUnits(String(u), P.decimals)).sort((a, b) => (b.gt(a) ? 1 : b.lt(a) ? -1 : 0))
+        if (!notes.length) { if (round === 0) info(`${tag}: empty`); break }
+        // one send spends at most the two largest notes
+        const spend = notes.slice(0, 2).reduce((s, n) => s.add(n), ethers.BigNumber.from(0))
+        const spendStr = ethers.utils.formatUnits(spend, P.decimals)
+        const total = ethers.utils.formatUnits(notes.reduce((s, n) => s.add(n), ethers.BigNumber.from(0)), P.decimals)
+        if (Number(spendStr) < minTxFor(chain, pool).min) { dust.push({ chain, pool, symbol: P.symbol, balance: total }); info(`${tag}: ${total} left as dust (under the minimum send)`); break }
+        info(`${tag}: sending ${spendStr}${notes.length > 2 ? ` (part ${round + 1}, ${notes.length} notes)` : ''}...`)
+        try {
+          const res = await apiPost('/api/withdraw', { signature: sig, amount: spendStr, recipient, pool, chain }, { timeoutMs: 180_000 })
+          sends.push({ chain, pool, symbol: res.symbol, amount: spendStr, received: res.recipientReceives, fee: res.fee, txHash: res.txHash, explorer: explorerTx(chain, res.txHash) })
+          ok(`${tag}: sent ${spendStr}, recipient gets ${res.recipientReceives} ${res.symbol}  ${color(explorerTx(chain, res.txHash), c.dim)}`)
+        } catch (e) {
+          const m = cleanErr(e)
+          if (/twice the fee/i.test(m)) { dust.push({ chain, pool, symbol: P.symbol, balance: total }); info(`${tag}: ${total} left as dust (at or below twice the fee)`) }
+          else { errors.push({ chain, pool, error: m }); info(`${tag}: not sent (${m})`) }
+          break
+        }
+      }
+    }
+  }
+  const received = {}
+  for (const s of sends) received[s.symbol] = (Number(received[s.symbol] || 0) + Number(s.received)).toString()
+  log('')
+  if (sends.length) ok(color(`${sends.length} send(s) done`, c.green) + (dust.length ? `, ${dust.length} pool(s) left with dust` : ''))
+  else info('nothing to send')
+  log('')
+  result({ recipient, amount: 'max', sends, received, dust, errors })
+  if (errors.length && !sends.length) fail(errors.map((e) => `${e.chain}/${e.pool}: ${e.error}`).join('; '))
+}
+
 function getFlag(args, name) {
   const i = args.indexOf(name)
   if (i === -1) return null
@@ -1444,6 +1526,8 @@ ${color('Commands:', c.bold)}
                                  --chain all shows every chain in one run.
   deposit <amount> [--pool] [--chain]   Shield public funds into private pool.
   send <to> <amount> [--pool] [--chain] Send privately to an address (no gas from you).
+                                 amount "max": the whole private balance (no --pool = every pool; --chain all).
+                                 swap/bridge also take "max" (the most one operation can move).
   swap <amount> --from <pool> [--chain] Private same-chain swap via Uniswap V3.
   bridge <asset> <to> <amount>   Bridge cross-chain privately via NEAR Intents (--no-wait: return once submitted)
                                  (--from ${Object.keys(BRIDGE_ORIGINS).join('|')}).
