@@ -977,7 +977,6 @@ pre.hl-inline code { color: #C9CACC; }
   .addr_long { display: none; }
   .addr_short { display: inline; }
   .chain_menu { position: fixed !important; top: 60px !important; left: 12px !important; right: 12px !important; width: auto !important; }
-  .user_panel_menu { position: fixed !important; top: 60px !important; right: 12px !important; left: auto !important; max-width: calc(100vw - 24px); }
   .app_main { padding-top: 104px !important; padding-left: 12px; padding-right: 12px; }
   .app_main .card { width: 100%; }
 }
@@ -985,7 +984,50 @@ pre.hl-inline code { color: #C9CACC; }
   .chain_btn .chain_name { display: none; }
 }
 
-/* bridge watch: pulsing dot for bridges in flight */
-.bridge-watch .bw-dot { animation: bwpulse 1.4s ease-in-out infinite; }
+/* wallet panel (UserPanel): dropdown on desktop, bottom sheet on phones. Design: Figma page "Wallet — bridges". */
+.user_panel_menu { position: absolute; top: 100%; right: 0; margin-top: 6px; width: 364px; max-width: calc(100vw - 24px); background: var(--color-bg1); border: 1px solid #26272a; border-radius: 16px; box-shadow: 0 12px 40px rgba(0,0,0,.6); z-index: 1000; overflow: hidden; animation: up-in .14s ease-out; }
+@keyframes up-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+.user_panel_scrim { display: none; }
+.up-grab { display: none; }
+.up-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 14px 12px 14px 16px; border-bottom: 1px solid var(--color-border); }
+.up-kicker { font-family: var(--font-mono); font-size: 10.5px; letter-spacing: .04em; text-transform: uppercase; color: #6e7074; margin-bottom: 3px; }
+.up-icon { width: 32px; height: 32px; display: inline-flex; align-items: center; justify-content: center; border-radius: 10px; background: var(--color-bg4); border: 0; color: var(--color-muted); cursor: pointer; }
+.up-icon:hover { color: var(--color-fg1); }
+.up-icon svg { width: 16px; height: 16px; }
+.up-section { padding: 12px 8px 8px; display: flex; flex-direction: column; gap: 2px; }
+.up-section-h { display: flex; justify-content: space-between; align-items: baseline; padding: 0 8px 6px; }
+.up-empty { padding: 10px 8px 6px; font-size: 13px; color: #6e7074; }
+.up-note { padding: 6px 8px 2px; font-size: 11.5px; line-height: 1.45; color: #6e7074; }
+.up-bridge { padding: 11px 10px; border-radius: 12px; display: flex; flex-direction: column; gap: 6px; }
+.up-bridge.live { background: rgba(52,199,123,0.05); }
+.up-l1 { display: flex; align-items: center; gap: 8px; }
+.up-route { flex: 1; min-width: 0; font-size: 13px; color: var(--color-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-route b { color: var(--color-fg1); font-weight: 600; font-size: 13.5px; }
+.up-arrow { color: #6e7074; }
+.up-pill { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; border-radius: 999px; padding: 3px 9px; white-space: nowrap; flex-shrink: 0; }
+.up-pill .bs-dot { width: 6px; height: 6px; }
+.up-l2 { display: flex; align-items: center; gap: 8px; font-size: 12px; color: #6e7074; }
+.up-detail { flex: 1; min-width: 0; font-family: var(--font-mono); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.up-l2 a { color: var(--color-muted); display: inline-flex; }
+.up-l2 a:hover { color: var(--color-fg1); }
+.up-l2 svg { width: 14px; height: 14px; }
+.up-foot { border-top: 1px solid var(--color-border); padding: 6px 0; }
+.up-row { display: flex; align-items: center; gap: 10px; width: 100%; padding: 11px 16px; background: none; border: 0; font: inherit; font-size: 14px; text-align: left; text-decoration: none; cursor: pointer; }
+.up-row:hover { background: var(--color-bg4); }
+.up-row svg { width: 16px; height: 16px; flex-shrink: 0; }
+.up-badge { display: inline-flex; align-items: center; gap: 4px; padding: 1px 7px 1px 6px; border-radius: 999px; background: rgba(145,255,163,0.16); color: #91ffa3; font-family: var(--font-mono); font-size: 11px; font-weight: 500; }
+.bs-dot { display: inline-block; width: 6px; height: 6px; border-radius: 3px; background: #91ffa3; flex-shrink: 0; animation: bwpulse 1.4s ease-in-out infinite; }
+.bridge-strip .bs-dot { width: 7px; height: 7px; }
+.bridge-strip:hover { filter: brightness(1.15); }
 @keyframes bwpulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
-@media (prefers-reduced-motion: reduce) { .bridge-watch .bw-dot { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .bs-dot, .user_panel_menu { animation: none !important; } }
+@media (max-width: 560px) {
+  .user_panel_scrim { display: block; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 999; animation: up-fade .18s ease-out; }
+  .user_panel_menu { position: fixed; top: auto; left: 0; right: 0; bottom: 0; margin: 0; width: 100%; max-width: none; max-height: 85vh; overflow-y: auto; border-radius: 22px 22px 0 0; border-bottom: 0; padding-bottom: env(safe-area-inset-bottom, 0); animation: up-sheet .22s cubic-bezier(.2,.8,.2,1); }
+  .up-grab { display: flex; justify-content: center; padding: 8px 0 2px; }
+  .up-grab span { width: 40px; height: 4px; border-radius: 2px; background: #26272a; }
+  .up-row { padding-top: 15px; padding-bottom: 15px; }
+  .up-foot { padding-bottom: 14px; }
+}
+@keyframes up-sheet { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes up-fade { from { opacity: 0; } to { opacity: 1; } }

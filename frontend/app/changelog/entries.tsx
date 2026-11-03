@@ -22,6 +22,26 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "bridges-in-wallet", date: "Nov 3, 2026", kind: "Improvement", areas: ["bridge"],
+    pill: "Your private bridges now live in the wallet panel",
+    title: "Private bridges in the wallet panel",
+    lead: "Open the wallet button to see your private bridges; the form keeps one line while a bridge is running.",
+    bullets: [
+      "The wallet button shows how many bridges are in flight. Its panel lists the latest bridges with status, amount received and a Track link, plus History & recovery for older ones.",
+      "On phones the panel opens as a sheet from the bottom of the screen.",
+      "While a bridge runs, a single line above the form shows it; a delivered bridge stays there for a few minutes.",
+    ],
+    primary: { href: "/app", text: "Open the app" }, docs: "/docs",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">Wallet<span>Private bridges</span></div>
+        <div className="cl-row"><span>0.004 ETH Arbitrum → Base</span><span className="cl-pill pend">Bridging</span></div>
+        <div className="cl-row"><span>0.00657 ETH Base → Robinhood</span><span className="cl-pill ok">Delivered</span></div>
+        <div className="cl-row"><span>History &amp; recovery</span><span className="cl-pill ok">/recover</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "lower-bnb-minimum", date: "Nov 3, 2026", kind: "Improvement", areas: ["shield", "bridge", "cli"],
     pill: "BNB minimum deposit is now 0.01 BNB",
     title: "Lower BNB minimum, steadier network switching",
