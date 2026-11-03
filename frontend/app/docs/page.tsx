@@ -159,11 +159,13 @@ blackpool login                         # hidden prompt, or set BLACKPOOL_KEY
 blackpool balance --chain base
 blackpool deposit 25 --pool usdc        # shield
 blackpool send 0xRECIPIENT 2.5          # private send, relayer pays gas
+blackpool send 0xRECIPIENT max          # the whole private balance (add --chain all for every chain)
 blackpool swap 0.001 --from eth         # private ETH → USDC via Uniswap V3
-blackpool bridge 0.05 --to sol_usdc --recipient <solana address>
+blackpool swap max --from eth           # as much as one swap can move
+blackpool bridge sol_usdc <solana address> 25 --from base_usdc
 blackpool bridges                       # list your intents and their status
 blackpool recover                       # sweep stranded burners`}</Code>
-            <p>Every command accepts <code>--chain base|robinhood|arbitrum|bsc</code> (default <code>base</code>).</p>
+            <p>Every command accepts <code>--chain base|robinhood|arbitrum|bsc</code> (default <code>base</code>). <code>send</code>, <code>swap</code> and <code>bridge</code> accept <code>max</code> as the amount.</p>
           </section>
 
           <section id="agents">

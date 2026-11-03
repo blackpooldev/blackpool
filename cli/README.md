@@ -1,6 +1,6 @@
 # @blackpool/cli
 
-Private payments for onchain agents. One env var or one hidden prompt, then shield / send / swap / bridge with zero-knowledge privacy on **Base**, **Robinhood Chain**, **Arbitrum**, and **BNB Smart Chain**. Wraps the same API `docs.blackpool.cash/agents` uses - no ZK client needed on your side.
+Private payments for onchain agents. One env var or one hidden prompt, then shield / send / swap / bridge with zero-knowledge privacy on **Base**, **Robinhood Chain**, **Arbitrum**, and **BNB Smart Chain**. Proofs are built on your machine, the same way the web app does it; the full agent guide is [AGENTS.md](https://blackpool.cash/AGENTS.md).
 
 Every command takes an optional `--chain base|robinhood|arbitrum|bsc` flag (default `base`). On Base and Arbitrum the stablecoin is USDC; on Robinhood it's USDG; on BSC the stablecoins are USDC and USDT (Binance-Peg, 18 decimals) and the native asset is BNB.
 
@@ -57,20 +57,22 @@ blackpool deposit 0.05 --pool bnb --chain bsc       # shield BNB (BSC native poo
 blackpool send 0xRECIPIENT 2.5               # send 2.5 USDC privately (no gas from you)
 blackpool send 0xRECIPIENT 0.01 --pool eth   # send private ETH
 blackpool send 0xRECIPIENT 2.5 --chain robinhood    # send 2.5 USDG privately on Robinhood
+blackpool send 0xRECIPIENT max --pool usdt --chain bsc  # send the whole private USDT balance
+blackpool send 0xRECIPIENT max --chain all   # empty every private pool on every chain into one address
 blackpool swap 0.001 --from eth              # private same-chain swap ETH -> USDC (Uniswap V3)
 blackpool swap 3 --from usdc                 # private same-chain swap USDC -> ETH
+blackpool swap max --from eth --chain arbitrum      # swap as much private ETH as one swap can move
 blackpool bridge arb_usdc 0xRECIPIENT 2.5    # bridge cross-chain privately to Arbitrum (1Click)
 blackpool bridge bsc_usdt 0xRECIPIENT 5 --from bsc_usdc  # 1Click origin can be any shielded pool
-blackpool bridge rarb_eth 0xRECIPIENT 0.01 --chain robinhood  # router: Robinhood -> Arbitrum
-blackpool bridge rbsc_bnb 0xRECIPIENT 0.01 --chain robinhood  # router: Robinhood -> BSC
+blackpool bridge base_eth 0xRECIPIENT max --from hood_eth  # bridge as much as one bridge can move
 blackpool assets                             # list all supported bridge destinations
-blackpool recover                            # sweep any stranded funds from burner slots
+blackpool recover                            # sweep any stranded funds from one-time burners
 blackpool recover --to 0xADDR                # sweep to a different destination
 ```
 
 ## How it works
 
-Each command follows the pattern `docs.blackpool.cash/agents` documents.
+Each command follows the pattern [AGENTS.md](https://blackpool.cash/AGENTS.md) documents.
 
 **Login / balance / send / bridge** - you sign once; the CLI scans your notes and builds the Groth16 proof locally (the 20 MB proving key is downloaded once to `~/.blackpool/zk/`), then the relayer broadcasts it. You pay no gas. The relayer is compensated via the protocol fee (flat + 0.35% per withdraw / swap / bridge).
 

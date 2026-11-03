@@ -61,6 +61,7 @@ blackpool login                                   # key via hidden prompt (or BL
 blackpool balance --chain robinhood
 blackpool deposit 0.5 --chain robinhood           # shield
 blackpool send 0x… 0.1 --chain robinhood          # private send, no gas from you
+blackpool send 0x… max --chain all                # send every private balance to one address
 blackpool bridge sol_usdc <solana address> 0.1 --from hood_eth
 blackpool recover --chain all                     # sweep anything stranded, idempotent
 ```

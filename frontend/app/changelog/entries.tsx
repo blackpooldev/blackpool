@@ -22,6 +22,28 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "cli-0-4-2", date: "Nov 4, 2026", kind: "Improvement", areas: ["cli", "swap", "send"],
+    pill: "CLI 0.4.2: send max, cleaner swaps",
+    title: "CLI 0.4.2: max amounts and swaps that leave nothing behind",
+    lead: "Every flow was run end to end with real funds on Robinhood Chain, Base, Arbitrum and BNB Chain; this release carries what that run fixed.",
+    bullets: [
+      "send, swap and bridge accept max. send max empties a pool, every pool on a chain, or every pool on every chain (--chain all), splitting across several sends when the balance sits in many notes.",
+      "Private swaps swap the full amount. The relayer advances the gas to re-shield the output and the one-time burner returns what it did not use, so no funds stay behind; the web app does the same.",
+      "The CLI exits as soon as a command finishes, prices gas from the live base fee (Arbitrum no longer fails with \"cannot estimate gas\"), sends a valid gas price on BNB Chain, and passes exact amounts, so a full balance of an 18-decimal token can be sent.",
+      "Balances read right after a transaction are current: the API checks every pool snapshot against the chain before answering.",
+      "Two open app tabs can no longer recover the same burner at once, and every recovery is simulated before it is sent.",
+    ],
+    primary: { href: "/docs#cli", text: "CLI docs" }, docs: "/AGENTS.md",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">CLI 0.4.2<span>4 chains tested</span></div>
+        <div className="cl-row"><span>send 0x… max --chain all</span><span className="cl-pill ok">every pool</span></div>
+        <div className="cl-row"><span>swap 0.002 ETH → USDC</span><span className="cl-pill ok">burner empty</span></div>
+        <div className="cl-row"><span>Robinhood · Base · Arbitrum · BNB</span><span className="cl-pill ok">passed</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "bridges-in-wallet", date: "Nov 3, 2026", kind: "Improvement", areas: ["bridge"],
     pill: "Your private bridges now live in the wallet panel",
     title: "Private bridges in the wallet panel",
