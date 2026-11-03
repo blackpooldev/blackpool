@@ -204,7 +204,7 @@ async function apiPost(path: string, body: Record<string, unknown>, timeoutMs = 
   if (LOCAL_ZK_PATHS.has(path)) return zkCall(path, body)
   if ('signature' in body) { const { signature: _drop, ...rest } = body; body = rest }
   // timeout so a stalled request on mobile aborts (and callers can retry) instead of hanging.
-  // 60s default because /api/deposit/prepare does ~12s server-side ZK proof-gen that can spike.
+  // 60s default for slow mobile networks; proofs are built locally and never hit this timeout.
   // 429: the request was rejected before the handler ran, so waiting and resending is always safe.
   for (let attempt = 0; ; attempt++) {
     const ctrl = new AbortController()
@@ -635,7 +635,7 @@ export default function Home() {
     ]
     setIsTrading(true)
     setStepper({ steps: sendSteps, active: 0, error: null })
-    setStatus(`Sending privately${list.length > 1 ? ` to ${list.length} recipients` : ''}... proof generation can take ~1 min${list.length > 1 ? ' each' : ''}`)
+    setStatus(`Sending privately${list.length > 1 ? ` to ${list.length} recipients` : ''}... building the proof on this device`)
     try {
       setStepper({ steps: sendSteps, active: 1, error: null })
       const res = await apiPost('/api/withdraw', {
@@ -695,7 +695,7 @@ export default function Home() {
     if (!(await ensureWalletChain())) return
 
     setIsTrading(true)
-    setStatus('Preparing deposit... proof generation can take ~1 min')
+    setStatus('Preparing deposit... building the proof on this device')
     try {
       // apiPostRetry (not apiPost): proof-gen can spike past the timeout and abort once on mobile
       // ("Fetch is aborted"). Retrying transparently recovers instead of failing the whole deposit.
@@ -705,7 +705,7 @@ export default function Home() {
         amount,
         pool: activePool,
         chain: activeChain,
-      }, 4, (n) => setStatus(`Preparing deposit... proof generation can take ~1 min (retry ${n})`))
+      }, 4, (n) => setStatus(`Preparing deposit... building the proof on this device (retry ${n})`))
 
       const sendTx = async (tx: { to: string, data: string, value: string }) => {
         if (walletClient) {
@@ -860,7 +860,7 @@ export default function Home() {
     ]
     setIsTrading(true)
     setStepper({ steps: bridgeSteps, active: 0, error: null })
-    setStatus(`Bridging privately... proof + solver can take ~2 min`)
+    setStatus(`Bridging privately... building the proof on this device`)
     try {
       setStepper({ steps: bridgeSteps, active: 1, error: null })
       const res = await apiPost('/api/swap', {
@@ -1086,7 +1086,7 @@ export default function Home() {
         const gasNeeded = (RESHIELD_GAS + APPROVE_GAS) * maxFeePerGas * BigInt(120) / BigInt(100)
         if ((await provider.getBalance(bState.address)) < gasNeeded) {
           setStatus('topping up gas for burner...')
-          const g = await apiPostRetry('/api/burner-gas', { signature, burnerAddress: bState.address, chain: recoverChain, txCount: 2 }, 5, (n) => setStatus(`topping up gas... (retry ${n})`))
+          const g = await apiPostRetry('/api/burner-gas', { burnerAddress: bState.address, chain: recoverChain, txCount: 2 }, 5, (n) => setStatus(`topping up gas... (retry ${n})`))
           if (!g.success) throw new Error('gas top-up failed')
           await pollBalance(provider, bState.address, gasNeeded, 'burner gas', 120)
         }
@@ -1235,7 +1235,7 @@ export default function Home() {
         const usdcOnBurner = await pollErc20(provider, USDC_BASE, bState.address, BigInt(1), 200)
         fundedBurner = true // USDC has landed on the burner — from here a failure IS recoverable
         setStatus('topping up gas for burner..')
-        const g = await apiPostRetry('/api/burner-gas', { signature, burnerAddress: bState.address, chain: activeChain }, 4, (n) => setStatus(`topping up gas... (retry ${n})`))
+        const g = await apiPostRetry('/api/burner-gas', { burnerAddress: bState.address, chain: activeChain }, 4, (n) => setStatus(`topping up gas... (retry ${n})`))
         if (!g.success) throw new Error('gas top-up failed')
         await pollBalance(provider, bState.address, BigInt(1), 'burner gas')
         swapAmountRaw = usdcOnBurner
@@ -1334,7 +1334,7 @@ export default function Home() {
         const gasNeeded = (BigInt(1600000) + BigInt(80000)) * swMaxFee * BigInt(120) / BigInt(100)
         if ((await provider.getBalance(bState.address)) < gasNeeded) {
           setStatus('topping up gas for reshield...')
-          const g = await apiPostRetry('/api/burner-gas', { signature, burnerAddress: bState.address, chain: activeChain, txCount: 2 }, 5, (n) => setStatus(`topping up gas... (retry ${n})`))
+          const g = await apiPostRetry('/api/burner-gas', { burnerAddress: bState.address, chain: activeChain, txCount: 2 }, 5, (n) => setStatus(`topping up gas... (retry ${n})`))
           if (!g.success) throw new Error('gas top-up failed')
           await pollBalance(provider, bState.address, gasNeeded, 'burner gas', 120)
         }

@@ -1,6 +1,7 @@
 import "./landing.css";
 import type { CSSProperties } from "react";
 import Link from "next/link";
+import { FAQ } from "./faq";
 import LandingMotion from "./components/LandingMotion";
 import Mark from "./components/Mark";
 import Icon from "./components/Icon";
@@ -45,7 +46,7 @@ export default function Landing() {
         <div className="lp-wrap lp-nav-in">
           <Link href="/" className="lp-brand"><Mark className="lp-mark" size={26} />Blackpool</Link>
           <nav className="lp-links">
-            <a href="#product">Product</a><a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><Link href="/changelog">Changelog</Link>
+            <a href="#product">Product</a><a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><a href="#faq">FAQ</a><Link href="/changelog">Changelog</Link>
           </nav>
           <div className="lp-nav-right">
             <Link href="/app" className="lp-btn pri">Launch app</Link>
@@ -53,7 +54,7 @@ export default function Landing() {
           </div>
         </div>
         <div className="lp-drawer">
-          <a href="#product">Product</a><a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><Link href="/changelog">Changelog</Link>
+          <a href="#product">Product</a><a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><a href="#faq">FAQ</a><Link href="/changelog">Changelog</Link>
           <Link href="/app" className="lp-btn pri lg">Launch app</Link>
         </div>
       </header>
@@ -238,13 +239,13 @@ export default function Landing() {
             </div>
             <div className="lp-pc" data-anim="" data-delay="1">
               <span className="tag">Principle</span>
-              <p>“Your signature derives everything. <span className="dim">Your wallet key never leaves your wallet, and nothing that can spend your notes is stored.</span>”</p>
+              <p>“Your signature derives everything, on your device. <span className="dim">It never leaves your browser, every proof is built locally, and nothing that can spend your notes is stored.</span>”</p>
               <div className="who"><span><b>Non-custodial</b>Pools are contracts; nothing that can spend your notes is stored</span></div>
             </div>
             <div className="lp-pc" data-anim="" data-delay="2">
               <span className="tag">Principle</span>
               <p>“The relayer pays the gas, <span className="dim">so the paying wallet is never yours.</span>”</p>
-              <div className="who"><span><b>Relayer-built transactions</b>Flat fee taken from the note itself</span></div>
+              <div className="who"><span><b>Relayed transactions</b>The relayer only sees finished proofs; a flat fee comes from the note itself</span></div>
             </div>
             <div className="lp-pc" data-anim="" data-delay="0">
               <span className="tag">Principle</span>
@@ -277,6 +278,19 @@ export default function Landing() {
           </div>
         </section>
 
+        <section className="lp-sec lp-faq" id="faq">
+          <div className="lp-faq-head" data-anim="">
+            <h2 className="lp-h2">Questions, answered.</h2>
+            <p>The short version. Everything else is in the <Link href="/docs#faq">docs</Link>.</p>
+          </div>
+          <div className="lp-faq-grid" data-anim="" data-delay="1">
+            {FAQ.filter((f) => f.home).map((f) => (
+              <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>
+            ))}
+          </div>
+          <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }) }} />
+        </section>
+
         <section className="lp-cta" data-anim="" data-blur="">
           <h2 className="lp-h2">Move value privately.<br /><span className="dim">Start with one signature.</span></h2>
           <p>Connect a wallet, sign once, and your private account exists on every supported chain.</p>
@@ -298,7 +312,7 @@ export default function Landing() {
             <div><h5>Product</h5><ul><li><Link href="/app">App</Link></li><li><a href="/docs#shield">Shield &amp; send</a></li><li><a href="/docs#swap">Swap</a></li><li><a href="/docs#bridge">Private bridge</a></li><li><Link href="/recover">Recovery</Link></li></ul></div>
             <div><h5>Chains</h5><ul><li><a href="/docs#chain-robinhood">Robinhood Chain</a></li><li><a href="/docs#chain-base">Base</a></li><li><a href="/docs#chain-arbitrum">Arbitrum</a></li><li><a href="/docs#chain-bsc">BNB Chain</a></li><li><a href="/docs#chain-ethereum">Ethereum</a></li><li><a href="/docs#chain-solana">Solana</a></li></ul></div>
             <div><h5>Developers</h5><ul><li><Link href="/docs">Docs</Link></li><li><a href="/docs#cli">CLI</a></li><li><Link href="/agents">Agents (AGENTS.md)</Link></li><li><a href="/agents#9-mcp-servers">MCP server</a></li><li><a href="/docs#api">API</a></li><li><a href="/docs#security">Security model</a></li><li><Link href="/analytics">Analytics</Link></li><li><Link href="/changelog">Changelog</Link></li></ul></div>
-            <div><h5>Resources</h5><ul><li><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer">npm package</a></li><li><a href="/docs#contracts">Contract addresses</a></li><li><a href="https://github.com/blackpooldev/blackpool/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security policy</a></li><li><Link href="/status">Status</Link></li><li><a href="mailto:hello@blackpool.cash">Contact</a></li></ul></div>
+            <div><h5>Resources</h5><ul><li><a href="#faq">FAQ</a></li><li><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer">npm package</a></li><li><a href="/docs#contracts">Contract addresses</a></li><li><a href="https://github.com/blackpooldev/blackpool/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security policy</a></li><li><Link href="/status">Status</Link></li><li><a href="mailto:hello@blackpool.cash">Contact</a></li></ul></div>
           </div>
           <div className="lp-foot-bottom">
             <nav><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><a href="/docs#security">Security</a><Link href="/status">Status</Link></nav>

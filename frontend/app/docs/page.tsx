@@ -1,3 +1,4 @@
+import { FAQ } from "../faq";
 import Link from "next/link";
 import Mark from "../components/Mark";
 import "./docs.css";
@@ -227,10 +228,7 @@ blackpool send 0xRECIPIENT 10 --pool usdc
 
           <section id="faq">
             <h2>FAQ</h2>
-            <details><summary>Do I need gas to send privately?</summary><p>No. The relayer pays gas and the fee is taken from the amount inside the proof.</p></details>
-            <details><summary>What if I lose my device?</summary><p>Connect the same wallet anywhere and sign once. Your account, notes, burners and bridge history are all derived or re-indexed from that signature.</p></details>
-            <details><summary>Can the team see my balance?</summary><p>No. Your device downloads the pool's public, encrypted notes and decrypts its own locally. The server never receives your signature or keys, so it cannot tell which notes are yours.</p></details>
-            <details><summary>Why is there a minimum amount?</summary><p>Fees are deducted from each spend; the minimum keeps every spend meaningfully above its own fee.</p></details>
+            {FAQ.map((f) => (<details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>))}
           </section>
 
           <footer className="dc-foot">
