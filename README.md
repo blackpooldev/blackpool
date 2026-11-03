@@ -36,7 +36,7 @@ The relayer sees a proof and an encrypted payload. It cannot link a withdrawal t
 | Arbitrum One (42161) | ETH · USDC | **live** |
 | BNB Smart Chain (56) | BNB · USDC · USDT | **live** |
 
-Pool proxies (UUPS; the admin can upgrade and pause, nothing else):
+Pool proxies (UUPS; the admin can upgrade and pause, nothing else). Admin on every chain: the 2-of-3 Safe `0x401027251176A8AFec701fE37412edeC45ec6FdB`:
 
 | Chain | ETH / BNB pool | Stablecoin pool(s) |
 |---|---|---|

@@ -443,7 +443,7 @@ Use the hosted server to plan (fees, routes, quotes, status) and the local serve
 - `BLACKPOOL_KEY` never leaves the machine: it signs the sign-in message, deposit approvals and deposit transactions locally.
 - The **sign-in signature** is cached in `$BLACKPOOL_HOME/config.json` (mode 600) and never sent anywhere: keys, note scanning and proofs are computed locally (CLI 0.4.0+), and the relayer receives finished proofs only. Anyone holding that signature can spend the agent's private balance. Treat the config directory like a key: never print it, never put it in prompts, logs or tool output.
 - Only sign the Blackpool sign-in message on blackpool.cash or with this CLI.
-- The contracts and circuits have not been externally audited; pools are upgradeable by an admin key during launch. Size balances accordingly. Details: https://blackpool.cash/docs#security
+- The contracts and circuits have not been externally audited; pools are upgradeable and pausable by a 2-of-3 Safe (0x401027251176A8AFec701fE37412edeC45ec6FdB), which cannot move notes. Size balances accordingly. Details: https://blackpool.cash/docs#security
 - Report vulnerabilities privately to hello@blackpool.cash (subject `security`).
 
 ---

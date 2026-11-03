@@ -2,9 +2,9 @@
 
 Source of truth for what is deployed. The API serves whatever pools its environment lists; check `GET https://api.blackpool.cash/api/health`.
 
-All pools are UUPS proxies (`ERC1967Proxy`); the admin can upgrade and pause, nothing else. Merkle zero family `privacyblackpool`, `zeros(0) = 0x1edb91df646d66b3e01420a5b8316cb085a4c3999f548d66afd87cfb555e5bd6`, tree height 26, root history 100. Every implementation and verifier is verified on [Sourcify](https://sourcify.dev) (exact match) and imported by the chains' Blockscout explorers; Hasher contracts are generated Poseidon bytecode (circomlibjs) with no Solidity source.
+All pools are UUPS proxies (`ERC1967Proxy`); the admin can upgrade and pause, nothing else. **Admin of every pool on every chain: the 2-of-3 Safe `0x401027251176A8AFec701fE37412edeC45ec6FdB`** (Safe v1.4.1, same address on all four chains; owners `0x91614605bb513Ef7F4E4B2Eb1227F7Bb1cf2dAFe`, `0x271E822f5156Ea4693822e1f37463340c4028f13`, `0xc6fE6880D4D088D1771cDF8F350e05AA13B2b2f4`), since 2026-11-03. Merkle zero family `privacyblackpool`, `zeros(0) = 0x1edb91df646d66b3e01420a5b8316cb085a4c3999f548d66afd87cfb555e5bd6`, tree height 26, root history 100. Every implementation and verifier is verified on [Sourcify](https://sourcify.dev) (exact match) and imported by the chains' Blockscout explorers; Hasher contracts are generated Poseidon bytecode (circomlibjs) with no Solidity source.
 
-Operational wallets (addresses only): deployer `0xB1aCDE318cd195b9Aa3B79441Fe171Bb9cF5FD0F`, relayer `0xb1aC1E5a5d68430061274875f3D6C71c885492f4`, fee recipient `0xb1acfEFc1023Ec6c875dB19AAC94571Dd3d08389`, admin `0xB1aCad20c0D0F6dA98841b09369eFAe46FdD8126`.
+Operational wallets (addresses only): deployer `0xB1aCDE318cd195b9Aa3B79441Fe171Bb9cF5FD0F`, relayer `0xb1aC1E5a5d68430061274875f3D6C71c885492f4`, fee recipient `0xb1acfEFc1023Ec6c875dB19AAC94571Dd3d08389`, former admin (retired, no rights) `0xB1aCad20c0D0F6dA98841b09369eFAe46FdD8126`.
 
 > The same deployer at the same nonce produces the same `CREATE` address on every chain, so several addresses below repeat across chains while being different contracts. Always read an address together with its chain.
 

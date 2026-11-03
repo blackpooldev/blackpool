@@ -47,7 +47,7 @@ export default function Terms() {
         <h2>6. Risks</h2>
         <ul>
           <li>The contracts and circuits have not been externally audited. They may contain bugs that lead to loss of funds.</li>
-          <li>Pools are upgradeable and pausable by an admin key during the launch period.</li>
+          <li>Pools are upgradeable and pausable by their admin, a 2-of-3 multisig (Safe).</li>
           <li>The hosted API relays proofs your device builds. It never receives your signature or keys, but it can be unavailable, refuse or delay a relay (see the <Link href="/docs#security">security model</Link>).</li>
           <li>Privacy depends on how many other people use a pool and on your own behaviour. Unusual amounts or timing can be correlated.</li>
           <li>Blockchains, RPC providers and third-party services can fail, fork or change.</li>

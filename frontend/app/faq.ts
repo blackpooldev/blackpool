@@ -45,7 +45,7 @@ export const FAQ: Faq[] = [
   },
   {
     q: "Who controls the contracts?",
-    a: "Each pool is an upgradeable contract. Its admin can pause or upgrade it but cannot move notes. Admin control is moving to a multisig, and the contracts have not had an external audit yet, so size your balances accordingly.",
+    a: "Each pool is an upgradeable contract. Its admin can pause or upgrade it but cannot move notes. That admin is a 2-of-3 multisig (Safe) on every chain, so no single key can upgrade or pause a pool. The contracts have not had an external audit yet, so size your balances accordingly.",
     home: true,
   },
   {

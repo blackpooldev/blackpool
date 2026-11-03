@@ -22,6 +22,25 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "safe-admin", date: "Nov 3, 2026", kind: "Improvement", areas: ["shield", "send", "swap", "bridge"],
+    pill: "Pool admin is now a 2-of-3 multisig",
+    title: "Pools controlled by a multisig",
+    lead: "Upgrading or pausing any pool now takes two of three independent signatures.",
+    bullets: [
+      "Every pool on Robinhood Chain, Base, Arbitrum and BNB Chain is administered by one Safe, 0x401027251176A8AFec701fE37412edeC45ec6FdB, the same address on all four chains.",
+      "The launch admin key handed over and holds no rights. The admin still cannot move notes; it can only pause or upgrade, now with two signatures.",
+    ],
+    primary: { href: "/docs#security", text: "Read the security model" }, docs: "/docs#contracts",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">Admin<span>Safe · 2 of 3</span></div>
+        <div className="cl-row"><span>Robinhood · Base · Arbitrum · BNB</span><span className="cl-pill ok">same Safe</span></div>
+        <div className="cl-row"><span>Upgrade or pause</span><span className="cl-pill pend">2 signatures</span></div>
+        <div className="cl-row"><span>Move user notes</span><span className="cl-pill ok">impossible</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "client-side-proving", date: "Nov 3, 2026", kind: "New feature", areas: ["shield", "send", "swap", "bridge", "cli"],
     pill: "Proofs are now built on your device",
     title: "Client-side proving",
