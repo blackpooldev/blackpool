@@ -32,9 +32,13 @@ export function EvmWalletSelector({ cb, render }: Props) {
         return () => { window.removeEventListener('keydown', onKey); document.body.style.overflow = prev }
     }, [open])
 
-    // dedupe by name (wagmi kadang expose injected + named duplikat), prioritas populer
+    // Dedupe by name (wagmi can expose both the generic injected connector and the same wallet by name), popular first.
+    // When wallets announce themselves by name (EIP-6963), drop the generic "Injected" entry: it goes through
+    // window.ethereum, which several installed wallets overwrite, so prompts can land in the wrong wallet.
     const seen = new Set<string>()
+    const named = connectors.some(c => c.id !== 'injected' && c.type === 'injected')
     const sortedConnectors = [...connectors]
+        .filter(c => !(named && c.id === 'injected'))
         .filter(c => { const k = c.name.toLowerCase(); if (seen.has(k)) return false; seen.add(k); return true })
         .sort((a, b) => {
             const rank = (n: string) => n === 'MetaMask' ? 0 : n === 'Coinbase Wallet' ? 1 : n === 'WalletConnect' ? 2 : 3

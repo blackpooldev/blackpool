@@ -41,7 +41,11 @@ async function providerOf(connector: Connector | undefined): Promise<any> {
 // withdrawn, but the button stops waiting.
 export async function switchWalletChain(connector: Connector | undefined, chainId: number, opts: { ms?: number; signal?: AbortSignal } = {}): Promise<void> {
   const ms = opts.ms ?? 45_000
+  const t0 = Date.now()
+  // Diagnostics for wallet-specific failures (no addresses or keys): read them in the browser console.
+  const log = (...a: unknown[]) => { try { console.info('[blackpool] network switch', `+${Date.now() - t0}ms`, ...a) } catch {} }
   const provider = await providerOf(connector)
+  log('start', { to: chainId, connector: `${(connector as any)?.id}/${connector?.name}`, flags: Object.keys(provider).filter((k) => /^is[A-Z]/.test(k) && provider[k] === true) })
   const hex = `0x${chainId.toString(16)}`
   const current = async () => parseInt(String(await timeout(provider.request({ method: 'eth_chainId' }), 5_000)), 16)
   const sync = () => { try { (connector as any)?.onChainChanged?.(hex) } catch { /* wagmi will catch up on the next event */ } }
@@ -51,11 +55,14 @@ export async function switchWalletChain(connector: Connector | undefined, chainI
   const request = (method: string, params: unknown[]) => new Promise<void>((resolve, reject) => {
     let done = false
     const finish = (fn: () => void) => { if (!done) { done = true; clearInterval(poll); clearTimeout(t); opts.signal?.removeEventListener('abort', onAbort); fn() } }
-    const onAbort = () => finish(() => reject(new SwitchError('cancelled', 'Network switch cancelled.')))
+    const onAbort = () => finish(() => { log(method, 'cancelled by a new pick'); reject(new SwitchError('cancelled', 'Network switch cancelled.')) })
     opts.signal?.addEventListener('abort', onAbort)
-    const t = setTimeout(() => finish(() => reject(new SwitchError('timeout', NO_ANSWER))), ms)
-    const poll = setInterval(async () => { if ((await current().catch(() => 0)) === chainId) finish(resolve) }, 1_500)
-    Promise.resolve(provider.request({ method, params })).then(() => finish(resolve), (e: any) => finish(() => reject(e)))
+    const t = setTimeout(() => finish(() => { log(method, 'no answer, timed out'); reject(new SwitchError('timeout', NO_ANSWER)) }), ms)
+    const poll = setInterval(async () => { const c = await current().catch((e) => { log('eth_chainId failed', errText(e)); return 0 }); if (c === chainId) finish(() => { log(method, 'wallet is on the target chain (seen by polling)'); resolve() }) }, 1_500)
+    log(method, 'sent')
+    Promise.resolve(provider.request({ method, params })).then(
+      () => finish(() => { log(method, 'answered ok'); resolve() }),
+      (e: any) => finish(() => { log(method, 'answered error', codeOf(e), errText(e).slice(0, 160)); reject(e) }))
   })
 
   try {
@@ -77,6 +84,7 @@ export async function switchWalletChain(connector: Connector | undefined, chainI
     }
   }
   const now = await current().catch(() => chainId)
+  log('done', { walletChain: now })
   if (now !== chainId) throw new SwitchError('failed', 'The wallet is still on another network. Switch it in the wallet and try again.')
   sync()
 }
