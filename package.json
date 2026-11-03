@@ -11,10 +11,8 @@
     "compile": "hardhat build && node scripts/compileHasher.js",
     "build": "npm run circuit && npm run compile",
     "test": "hardhat test mocha",
-    "eslint": "eslint --ext .js --ignore-path .gitignore .",
     "prettier:check": "prettier --check . --config .prettierrc",
     "prettier:fix": "prettier --write . --config .prettierrc",
-    "lint": "yarn eslint && yarn prettier:check",
     "zk:parity": "node scripts/zkParity.js",
     "validate:upgrades": "openzeppelin-upgrades-core validate artifacts/build-info --unsafeAllow state-variable-immutable,constructor --exclude 'contracts/Mocks/**'"
   },
@@ -41,14 +39,10 @@
     "@openzeppelin/contracts": "^5.4.0",
     "@openzeppelin/contracts-upgradeable": "^5.6.1",
     "@openzeppelin/upgrades-core": "^1.47.0",
-    "babel-eslint": "^10.1.0",
     "bignumber.js": "^9.0.0",
     "chai": "^5.2.0",
     "circomlibjs": "^0.1.7",
     "dotenv": "^10.0.0",
-    "eslint": "^7.28.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-prettier": "^3.4.0",
     "ethers": "^6.15.0",
     "hardhat": "^3.21.2",
     "mocha": "^12.0.0",
@@ -57,5 +51,18 @@
     "prompt-sync": "^4.2.0",
     "solhint-plugin-prettier": "^0.0.5"
   },
-  "type": "module"
+  "type": "module",
+  "overrides": {
+    "ws": "^8.21.0",
+    "underscore": "^1.13.8",
+    "bfj": "^9.1.4",
+    "ejs": "^7.0.2",
+    "glob": "^14.0.3",
+    "@openzeppelin/upgrades-core": {
+      "minimatch": "^11.0.1"
+    },
+    "mocha": {
+      "minimatch": "^11.0.1"
+    }
+  }
 }

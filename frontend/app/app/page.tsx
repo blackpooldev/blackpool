@@ -8,8 +8,10 @@ import {
   useDisconnect,
   useSignMessage,
   useSwitchChain,
+  useReadContract,
   useWalletClient
 } from 'wagmi';
+import { erc20Abi, formatUnits } from 'viem';
 import { base } from 'wagmi/chains';
 import { EvmWalletSelector } from "../components/WalletSelector";
 import { UserPanel } from "../components/UserPanel";
@@ -386,11 +388,12 @@ export default function Home() {
   const activeChainId = activeChain === 'robinhood' ? 4663 : activeChain === 'arbitrum' ? 42161 : activeChain === 'bsc' ? 56 : base.id
   const activeStableToken = DEX[activeChain].stable as `0x${string}`
   const { data: balance } = useBalance({ address, chainId: activeChainId })
-  const { data: stableBalance } = useBalance({ address, chainId: activeChainId, token: activeStableToken })
+  const { data: stableRaw } = useReadContract({ address: activeStableToken, abi: erc20Abi, functionName: 'balanceOf', args: address ? [address] : undefined, chainId: activeChainId, query: { enabled: !!address } })
+  const { data: stableDecimals } = useReadContract({ address: activeStableToken, abi: erc20Abi, functionName: 'decimals', chainId: activeChainId })
   // shown in the deposit modal: native for the eth pool, stablecoin for the non-native pool
   const depositWalletBalance = meta.isNative
-    ? (balance ? fmt3(balance.formatted) : undefined)
-    : (stableBalance ? fmt3(stableBalance.formatted) : undefined)
+    ? (balance ? fmt3(formatUnits(balance.value, balance.decimals)) : undefined)
+    : (stableRaw !== undefined && stableDecimals !== undefined ? fmt3(formatUnits(stableRaw, stableDecimals)) : undefined)
 
   const { data: walletClient } = useWalletClient()
   const { switchChainAsync } = useSwitchChain()

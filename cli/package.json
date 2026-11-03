@@ -52,5 +52,12 @@
   "license": "MIT",
   "publishConfig": {
     "access": "public"
+  },
+  "overrides": {
+    "ws": "^8.21.0",
+    "underscore": "^1.13.8",
+    "bfj": "^9.1.4",
+    "ejs": "^7.0.2",
+    "minimatch": "^11.0.1"
   }
 }

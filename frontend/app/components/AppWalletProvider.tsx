@@ -1,15 +1,11 @@
 'use client'
 
-import '@rainbow-me/rainbowkit/styles.css'
-import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRef } from 'react'
 import { WagmiProvider, createConfig, createStorage, fallback, http } from 'wagmi'
 import { base, mainnet, arbitrum, bsc } from 'wagmi/chains'
 import { defineChain } from 'viem'
-import { injected, walletConnect } from 'wagmi/connectors'
-
-const wcProjectId = process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID
+import { injected } from 'wagmi/connectors'
 
 // Robinhood Chain (Arbitrum Orbit L2, ETH gas). Not a wagmi built-in, so defined here.
 // chainId 4663 verified via eth_chainId; explorer: robin.etherscan.io.
@@ -37,17 +33,8 @@ const memoryStorage = {
 const createConnectors = () => {
     const list: any[] = []
 
-    // Always allow injected browser wallets (MetaMask, Coinbase, etc.)
+    // Injected browser wallets only (MetaMask, Rabby, Coinbase Wallet, mobile in-app browsers)
     list.push(injected())
-
-    // Add WalletConnect if configured
-    if (wcProjectId) {
-        try {
-            list.push(walletConnect({ projectId: wcProjectId }))
-        } catch (err) {
-            console.warn('Could not initialize WalletConnect:', err)
-        }
-    }
 
     return list
 }
@@ -85,9 +72,7 @@ export function EvmProviders({ children }: { children: React.ReactNode }) {
     return (
         <QueryClientProvider client={queryClientRef.current}>
             <WagmiProvider config={configRef.current}>
-                <RainbowKitProvider initialChain={robinhood} locale="en-US">
-                    {children}
-                </RainbowKitProvider>
+                {children}
             </WagmiProvider>
         </QueryClientProvider>
     )
