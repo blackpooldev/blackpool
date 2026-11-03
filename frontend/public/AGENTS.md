@@ -119,7 +119,7 @@ Without `--pool` (one entry per chain; `--chain all` returns four):
 A value of `"?"` with an `error` field means that read failed; retry.
 
 ### `deposit <amount> [--pool P] [--chain C]`
-Shield public funds from the agent wallet. ERC-20 pools approve first (one extra transaction). Needs native gas. ~30–90 s.
+Shield public funds from the agent wallet. ERC-20 pools approve first (one extra transaction). Needs native gas. ~10–30 s (the first run also downloads the 20 MB proving key).
 ```json
 {"ok":true,"command":"deposit","chain":"base","pool":"usdc","amount":25,"symbol":"USDC",
  "txHash":"0x…","explorer":"https://basescan.org/tx/0x…","privateBalance":"25.0"}
@@ -127,7 +127,7 @@ Shield public funds from the agent wallet. ERC-20 pools approve first (one extra
 `--pool` defaults to the chain's stablecoin pool.
 
 ### `send <recipient> <amount> [--pool P] [--chain C]`
-Private payment to any EVM address on the same chain. `amount` is what leaves your private balance; the recipient gets `amount − fee`. No gas needed. ~30–90 s.
+Private payment to any EVM address on the same chain. `amount` is what leaves your private balance; the recipient gets `amount − fee`. No gas needed. ~10–30 s.
 ```json
 {"ok":true,"command":"send","chain":"base","pool":"usdc","recipient":"0x…","amount":10,
  "received":"8.965","fee":"1.035","symbol":"USDC","txHash":"0x…","explorer":"https://basescan.org/tx/0x…"}
@@ -441,7 +441,7 @@ Use the hosted server to plan (fees, routes, quotes, status) and the local serve
 
 - **Dedicated agent wallet.** Fund it with only what the agent may spend. Never use a personal or treasury key.
 - `BLACKPOOL_KEY` never leaves the machine: it signs the sign-in message, deposit approvals and deposit transactions locally.
-- The **sign-in signature** is cached in `$BLACKPOOL_HOME/config.json` (mode 600) and sent to the API with each private operation. The API derives the private account keys from it in memory to build the proof and does not store or log it, but anyone holding that signature can spend the agent's private balance. Treat the config directory like a key: never print it, never put it in prompts, logs or tool output.
+- The **sign-in signature** is cached in `$BLACKPOOL_HOME/config.json` (mode 600) and never sent anywhere: keys, note scanning and proofs are computed locally (CLI 0.4.0+), and the relayer receives finished proofs only. Anyone holding that signature can spend the agent's private balance. Treat the config directory like a key: never print it, never put it in prompts, logs or tool output.
 - Only sign the Blackpool sign-in message on blackpool.cash or with this CLI.
 - The contracts and circuits have not been externally audited; pools are upgradeable by an admin key during launch. Size balances accordingly. Details: https://blackpool.cash/docs#security
 - Report vulnerabilities privately to hello@blackpool.cash (subject `security`).
@@ -450,7 +450,7 @@ Use the hosted server to plan (fees, routes, quotes, status) and the local serve
 
 ## 14. Direct API (advanced)
 
-The CLI is the supported interface. If you cannot run Node.js, the same operations are HTTP calls on `https://api.blackpool.cash` (`/api/balance`, `/api/deposit/prepare`, `/api/withdraw`, `/api/swap-private`, `/api/bridge/quote`, `/api/swap`, `/api/intents`, `/api/burner/*`, `/api/health`), all JSON. They need the sign-in signature (EIP-191 signature of the exact message below by the agent wallet), and deposits need you to sign and broadcast the returned transaction yourself. Endpoint list: https://blackpool.cash/docs#api
+The CLI is the supported interface: it derives keys and generates Groth16 proofs locally. A client in another language must do the same (see `cli/lib/zk.js`): read public pool data from `GET /api/zk/pool`, derive keys from the EIP-191 signature of the exact message below, prove with the published circuit (`https://blackpool.cash/zk/manifest.json`), then post the proof to `POST /api/relay`, or broadcast a deposit from its own wallet. The API never accepts the signature itself. Endpoint list: https://blackpool.cash/docs#api
 
 ```text
 Welcome to Blackpool

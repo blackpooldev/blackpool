@@ -1,0 +1,64 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "cash.blackpool/blackpool",
+  "title": "Blackpool",
+  "description": "Private payments for agents: shield, send, swap and bridge via ZK privacy pools on 4 EVM chains.",
+  "version": "0.4.0",
+  "websiteUrl": "https://blackpool.cash/agents",
+  "repository": {
+    "url": "https://github.com/blackpooldev/blackpool",
+    "source": "github",
+    "subfolder": "cli"
+  },
+  "icons": [
+    {
+      "src": "https://blackpool.cash/apple-icon.png",
+      "mimeType": "image/png",
+      "sizes": [
+        "180x180"
+      ]
+    }
+  ],
+  "packages": [
+    {
+      "registryType": "npm",
+      "registryBaseUrl": "https://registry.npmjs.org",
+      "identifier": "@blackpool/cli",
+      "version": "0.4.0",
+      "runtimeHint": "npx",
+      "transport": {
+        "type": "stdio"
+      },
+      "packageArguments": [
+        {
+          "type": "positional",
+          "value": "mcp"
+        }
+      ],
+      "environmentVariables": [
+        {
+          "name": "BLACKPOOL_KEY",
+          "description": "Private key of a dedicated agent wallet (0x...). Never use a main wallet.",
+          "isRequired": true,
+          "isSecret": true
+        },
+        {
+          "name": "BLACKPOOL_MCP_TOOLS",
+          "description": "Optional comma-separated tool allow-list, e.g. balance,send,bridges",
+          "isRequired": false
+        },
+        {
+          "name": "BLACKPOOL_MCP_READONLY",
+          "description": "Set to 1 to expose only read-only tools",
+          "isRequired": false
+        }
+      ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.blackpool.cash/mcp"
+    }
+  ]
+}

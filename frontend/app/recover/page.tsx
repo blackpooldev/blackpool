@@ -14,7 +14,7 @@ import { registryAuthSigFromSignIn } from '../lib/burner'
 // then this page sweeps whatever each burner holds DIRECTLY to the user's public wallet. No private
 // key or signature is ever sent to any server. This is the same derive+sweep logic the app's auto-
 // recovery uses, but it bypasses the reshield-to-pool path entirely (funds go to the public wallet,
-// which the user can re-shield in the app afterward). Works even if localStorage was wiped.
+// which the user can re-shield in the app afterward). Works from the signature alone.
 
 const SIGN_MESSAGE = 'Welcome to Blackpool\n\nSign this message to access your private account.\n\n- Gas free: no transaction is sent\n- Your private account keys are derived from this signature\n- It cannot move funds from your wallet or approve spending\n- Only sign it on blackpool.cash or the Blackpool CLI'
 // byte-identical to backend src/burnerRegistry.js + app/lib/burner.ts

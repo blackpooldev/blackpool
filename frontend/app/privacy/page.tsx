@@ -18,7 +18,7 @@ export default function Privacy() {
         <h2>The short version</h2>
         <ul>
           <li>No sign-up, no names, no email addresses (unless you write to us), no cookies, no analytics scripts, no browser storage for your account.</li>
-          <li>To build proofs and read your private balance, the API receives your sign-in signature with each request. It uses it in memory for that request and does not store or log it.</li>
+          <li>Your sign-in signature and private account keys never reach our servers. Your device computes your balance and builds every proof locally; the API receives finished proofs and requests for public pool data.</li>
           <li>We keep three small databases: an encrypted burner registry, a bridge record per private bridge, and a ledger of fees. None of them contains your wallet address.</li>
           <li>Deposits and withdrawals are public blockchain transactions. Blackpool hides the link between them, not the transactions themselves.</li>
         </ul>
@@ -33,7 +33,7 @@ export default function Privacy() {
         <h2>The relayer API</h2>
         <p>The app and the CLI call <code>api.blackpool.cash</code> for every private operation. Depending on the operation it receives:</p>
         <ul>
-          <li><b>Your sign-in signature.</b> Your private account keys are derived from it. The API derives them in memory to decrypt your notes, compute your balance and build the zero-knowledge proof for a send, swap or bridge. The signature and the keys are not written to disk or logs. Because the API sees them while it works, using the hosted API means trusting it with them for the duration of a request; see the <Link href="/docs#security">security model</Link>.</li>
+          <li><b>Finished proofs.</b> To relay a send, swap or bridge, the API receives the proof and its public data: nullifiers, new commitments, encrypted notes, recipient, amount and fee. All of it is published on-chain by the transaction anyway. It does not receive your signature or keys; see the <Link href="/docs#security">security model</Link>.</li>
           <li><b>What you ask it to do.</b> Amounts, assets, chains and recipient addresses for the operation.</li>
           <li><b>Your wallet address</b> when you prepare a deposit, because the deposit transaction is sent from it.</li>
           <li><b>Network metadata.</b> Your IP address is used for rate limiting in memory (a one-minute window). Our hosting providers (Cloudflare and Railway) keep standard request logs — time, path, status, IP address — for a limited period under their own policies.</li>

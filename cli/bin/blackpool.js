@@ -175,7 +175,48 @@ async function ensureSignature(wallet, { forceNew = false } = {}) {
 }
 
 // === HTTP ===
+// === local proving ===
+// Balance scans, deposits, payments and swaps are computed on this machine (lib/localApi.js): keys come from
+// the cached sign-in signature, proofs from the circuit files in <BLACKPOOL_HOME>/zk/. The API only receives
+// finished proofs (POST /api/relay) and serves public pool data, so the signature never leaves this machine.
+let LOCAL = null
+function localApi() {
+  if (LOCAL) return LOCAL
+  const { createLocalApi } = require('../lib/localApi')
+  const { createCircuitLoader } = require('../lib/circuit')
+  const UA = `blackpool-cli/${require('../package.json').version}`
+  const request = async (method, endpoint, body) => {
+    for (let attempt = 0; ; attempt++) {
+      const r = await fetch(`${API}${endpoint}`, {
+        method, headers: { 'Content-Type': 'application/json', 'User-Agent': UA },
+        body: method === 'GET' ? undefined : JSON.stringify(body || {}), signal: AbortSignal.timeout(120_000),
+      })
+      let json = {}
+      try { json = await r.json() } catch {}
+      if (r.status === 429 && attempt < 4) {
+        const wait = Math.min(Math.max(Number(json?.retryAfter) || 5, 1), 30)
+        info(`rate limited by the API, retrying in ${wait}s...`)
+        await new Promise((res) => setTimeout(res, wait * 1000)); continue
+      }
+      if (!r.ok) throw Object.assign(new Error(json?.error || `HTTP ${r.status}`), { status: r.status })
+      return json
+    }
+  }
+  let said = false
+  LOCAL = createLocalApi({
+    request,
+    loadCircuit: createCircuitLoader({ dir: path.join(CONFIG_DIR, 'zk'), userAgent: UA }),
+    onProgress: (p) => {
+      if (p.stage === 'download') info(`downloading proving key (${p.file}, ${Math.round((p.bytes || 0) / 1e6)} MB, first run only)...`)
+      if (p.stage === 'prove' && !said) { info('generating zero-knowledge proof locally...'); said = true }
+    },
+  })
+  return LOCAL
+}
+
 async function apiPost(endpoint, body, opts = {}) {
+  if (localApi().handles(endpoint)) return localApi().handle(endpoint, body)
+  if (body && 'signature' in body) { body = { ...body }; delete body.signature } // never sent to the API
   for (let attempt = 0; ; attempt++) {
     try { return await apiPostOnce(endpoint, body, opts) }
     catch (e) {
@@ -636,7 +677,7 @@ async function cmdDeposit(args) {
   log(color(`  shielding ${amount} ${pool.toUpperCase()} on ${C.label}`, c.bold))
   log(color(`  from public wallet ${wallet.address}`, c.dim))
   log('')
-  info('preparing deposit... proof generation can take ~60-90 seconds')
+  info('preparing deposit (the proof is generated on this machine)...')
 
   const prep = await apiPost('/api/deposit/prepare', {
     signature: sig, address: wallet.address, amount: n, pool, chain,

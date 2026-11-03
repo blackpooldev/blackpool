@@ -69,7 +69,7 @@ The CLI keeps the key you give it and the cached sign-in signature in `~/.blackp
 
 ## How it works
 
-- **Sign-in.** The wallet signs one fixed message. `keccak256(sig)` becomes the encryption key, its hash the UTXO spending key; the same wallet reproduces the same account anywhere. The hosted relayer API receives the signature with each private operation, derives the keys in memory to build the proof and never stores them (client-side proving is on the roadmap).
+- **Sign-in.** The wallet signs one fixed message. `keccak256(sig)` becomes the encryption key, its hash the UTXO spending key; the same wallet reproduces the same account anywhere. Keys, note scanning and Groth16 proofs are computed on the user's device (web worker in the app, Node in the CLI, `cli/lib/zk.js`); the relayer API receives finished proofs only and never the signature.
 - **Shield.** A deposit inserts a commitment `Poseidon(amount, pubkey, blinding)` into the pool's tree. The amount is free-form: no fixed denominations.
 - **Spend.** A 2-in / 2-out Groth16 circuit (`circuits/`) proves ownership of the inputs, correctness of the outputs and that the nullifiers are fresh. The relayer verifies the proof on-chain through `Verifier2`.
 - **Swap.** Same-chain swaps withdraw to a one-time burner wallet, swap on the chain's DEX, and re-shield. Burner keys are registered encrypted (client-side AES-GCM) so a stalled swap is recoverable from any device.

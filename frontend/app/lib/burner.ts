@@ -10,7 +10,7 @@ import { Wallet, keccak256, toUtf8Bytes, getBytes, concat, type Provider } from 
 //   • The burner privkey is encrypted CLIENT-SIDE (WebCrypto AES-256-GCM under keccak256(sign-in sig))
 //     and pushed to the backend registry as ciphertext. The backend never sees plaintext.
 //   • Recovery from ANY device: re-sign the two fixed messages, fetch the registry rows, decrypt
-//     locally, sweep. No localStorage, fully device-portable, non-custodial.
+//     locally, sweep. No browser storage, fully device-portable, non-custodial.
 
 const API = process.env.NEXT_PUBLIC_API_URL || 'https://blackpool-api.fly.dev'
 

@@ -24,7 +24,7 @@ blackpool login
 # ✓ wallet stored at ~/.blackpool/wallet.json (chmod 600)
 ```
 
-The key is prompted with **hidden input** (no echo, never enters shell history), then stored locally at `~/.blackpool/wallet.json` with `chmod 600` (owner-only). It is never transmitted - only the derived signature is sent to the relayer.
+The key is prompted with **hidden input** (no echo, never enters shell history), then stored locally at `~/.blackpool/wallet.json` with `chmod 600` (owner-only). It is never transmitted, and neither is the sign-in signature: keys and proofs are computed on your machine.
 
 ### Env var (agents / CI) - no prompt
 
@@ -72,7 +72,7 @@ blackpool recover --to 0xADDR                # sweep to a different destination
 
 Each command follows the pattern `docs.blackpool.cash/agents` documents.
 
-**Login / balance / send / bridge** - you sign once, the relayer builds the Groth16 proof server-side, and broadcasts. You pay no gas. The relayer is compensated via the protocol fee (flat + 0.35% per withdraw / swap / bridge).
+**Login / balance / send / bridge** - you sign once; the CLI scans your notes and builds the Groth16 proof locally (the 20 MB proving key is downloaded once to `~/.blackpool/zk/`), then the relayer broadcasts it. You pay no gas. The relayer is compensated via the protocol fee (flat + 0.35% per withdraw / swap / bridge).
 
 **Deposit** - your public wallet signs and broadcasts the shield tx (this is the only step where you pay gas, because the pool must see funds coming from a public address). For ERC-20 pools (USDC), an `approve` runs first; the CLI polls the on-chain allowance before broadcasting the deposit (same fix as the frontend for load-balanced RPC lag).
 
@@ -103,6 +103,7 @@ If any step fails between (2) and (7), funds remain on the burner; its key is in
 
 - `~/.blackpool/wallet.json` - stored private key (chmod 600, only if you used `blackpool login` interactively).
 - `~/.blackpool/config.json` - cached BLACKPOOL signatures per wallet (chmod 600).
+- `~/.blackpool/zk/` - public proving key files, verified against the published SHA-256.
 
 ## Verified live on Base mainnet
 

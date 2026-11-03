@@ -21,6 +21,7 @@ import { TxResult, explorerHomeUrl, explorerName } from "../components/TxResult"
 import { SlippageControl } from "../components/Slippage";
 import { createAndRegisterBurner, listRecoverableBurners, markBurnerSwept, burnerWallet, registryAuthSigFromSignIn, type BurnerState } from "../lib/burner";
 import { useUsdPrice, fmtUsd } from "../lib/useUsdPrice";
+import { LOCAL_ZK_PATHS, zkCall, zkWarm, onZkProgress } from "../lib/zkClient";
 
 // Empty string = same-origin. /api/* is proxied by a Next.js rewrite to the backend on :4002 (see next.config.ts).
 const API_URL = process.env.NEXT_PUBLIC_API_URL || ''
@@ -196,6 +197,10 @@ async function sendBurnerResilient(
 }
 
 async function apiPost(path: string, body: Record<string, unknown>, timeoutMs = 60000) {
+  // Balance, payments, deposits and swaps are proved on this device (lib/zkClient.ts -> /zk/worker.js).
+  // The sign-in signature never leaves the browser: it is stripped from every request that does go out.
+  if (LOCAL_ZK_PATHS.has(path)) return zkCall(path, body)
+  if ('signature' in body) { const { signature: _drop, ...rest } = body; body = rest }
   // timeout so a stalled request on mobile aborts (and callers can retry) instead of hanging.
   // 60s default because /api/deposit/prepare does ~12s server-side ZK proof-gen that can spike.
   // 429: the request was rejected before the handler ran, so waiting and resending is always safe.
@@ -267,6 +272,11 @@ export default function Home() {
   const [tab, setTab] = useState<Tab>('send');
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
+  // Local proving progress: only annotates an operation that is already showing a status line.
+  useEffect(() => onZkProgress((p) => {
+    if (p.stage === 'download' && typeof p.pct === 'number') setStatus((s) => (s ? `downloading proving key (first time only) ${p.pct}%` : s))
+    else if (p.stage === 'prove') setStatus((s) => (s ? 'generating ZK proof on this device...' : s))
+  }), [])
   const [depositTx, setDepositTx] = useState<string | null>(null);
 
   const [depositAmount, setDepositAmount] = useState('');
@@ -282,7 +292,7 @@ export default function Home() {
   // stuck-burner recovery: {pool, amount} when a prior swap left funds on a burner (reshield failed)
   const [stuckBurner, setStuckBurner] = useState<{ pool: string, raw: bigint, display: string, sym: string, chain: ChainKey, privateKey: string } | null>(null);
   const autoRecoverRef = useRef<string | null>(null); // burner address we've already auto-triggered recovery for
-  // set when a burner exists in localStorage but the current signature can't decrypt it (wallet gave
+  // set when a burner exists but the current signature can't decrypt it (wallet gave
   // a different signature than when it was saved) — funds are on-chain but this session can't sign for them
   const [burnerSigMismatch, setBurnerSigMismatch] = useState<string | null>(null);
   const [slippage, setSlippage] = useState(100); // basis points; 100 = 1% (Smart default)
@@ -360,7 +370,7 @@ export default function Home() {
   const [privateBalanceChanged, setPrivateBalanceChanged] = useState(0)
   const { signMessage } = useSignMessage()
   // Registry auth signature — derived locally from the sign-in signature (see lib/burner.ts), so the wallet is
-  // prompted exactly once per session. Cached in-memory (never localStorage). The backend ecrecovers it to the
+  // prompted exactly once per session. Cached in memory only. The backend ecrecovers it to the
   // derived owner address but CANNOT obtain the encryption key from it (non-custodial).
   const authSigRef = useRef<string | null>(null)
   const getRegistryAuthSig = async (): Promise<string> => {
@@ -447,7 +457,7 @@ export default function Home() {
 
   // detect a stuck burner (prior swap whose reshield failed) + AUTO-RESUME it in the background.
   // Burner keys are DERIVED from the signature (+nonce), so we can SCAN derived addresses for
-  // stranded on-chain funds even if localStorage was wiped — then finish recovery automatically.
+  // stranded on-chain funds from the signature alone — then finish recovery automatically.
   // The burner signs its own txs (no wallet popup), so this runs seamlessly without a click.
   useEffect(() => {
     let cancelled = false
@@ -1005,7 +1015,7 @@ export default function Home() {
 
   // Recover funds stranded on a burner from a swap whose reshield failed. Reshields the token the
   // burner actually holds into its matching pool, crediting the user's private balance. `nonce`
-  // selects which derived burner (from a scan) — works even if localStorage was wiped.
+  // selects which derived burner (from a scan) — works from the signature alone.
   // Reshield funds stranded on a burner back into the user's private pool. The burner is now a RANDOM
   // ephemeral wallet, so the caller passes its private key directly (from the registry decrypt, or a
   // legacy nonce-derived key for pre-rewrite burners). recoverChain is where the funds actually sit.
@@ -1758,7 +1768,7 @@ export default function Home() {
 }
 
 // The sign-in signature derives EVERY key (account + all burners), so it MUST NOT be persisted to
-// disk. Persisting it in localStorage meant anyone with access to the browser profile could drain
+// disk. Persisting it in browser storage would let anyone with access to the browser profile drain
 // funds. We keep it in an in-memory module store only: it survives re-renders and navigation within
 // the session, but is gone on refresh/tab-close. Signing is deterministic for EOAs, so re-signing
 // after a refresh yields the IDENTICAL signature — same account, same burners, fully device-portable,
@@ -1769,6 +1779,7 @@ function getStoredSignature(address: string): string | null {
 }
 function saveSignature(address: string, signature: string): void {
   _sigStore.set(address.toLowerCase(), signature)
+  zkWarm() // fetch the proving key in the background so the first proof does not wait for it
 }
 
 // ===== Top-level stable components (do NOT define inside Home — remounting on every render closes the keyboard on mobile) =====

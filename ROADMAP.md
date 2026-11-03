@@ -14,7 +14,8 @@ Where Blackpool is today and what comes next. Dates are not promised; the order 
 | Same-chain swap through a one-time burner (Uniswap V3; PancakeSwap V3 on BNB Chain) | Live on all four chains |
 | Private bridge via NEAR Intents (EVM chains and Solana) | Live |
 | Encrypted burner registry + recovery from any device | Live at [blackpool.cash/recover](https://blackpool.cash/recover) |
-| Relayer API with relayer-built proofs, no gas for the user | Live at `api.blackpool.cash` |
+| Client-side proving: keys and Groth16 proofs stay on the user's device (app and CLI) | Live |
+| Relayer API: broadcasts finished proofs, no gas for the user | Live at `api.blackpool.cash` |
 | CLI | [`@blackpool/cli`](https://www.npmjs.com/package/@blackpool/cli) on npm |
 | Public analytics and status | [blackpool.cash/analytics](https://blackpool.cash/analytics), [blackpool.cash/status](https://blackpool.cash/status) |
 
@@ -22,10 +23,9 @@ Contract addresses for every pool are in [`deploy/ADDRESSES.md`](deploy/ADDRESSE
 
 ## Next
 
-1. **Client-side proving.** Build proofs in the browser and the CLI so the relayer API no longer receives the sign-in signature. Today the hosted API derives keys in memory per request to build proofs; this removes that trust.
-2. **Admin to a multisig.** Pools are UUPS proxies controlled by a single admin key during launch. Upgrade and pause move to a multisig.
-3. **External audit** of the pool contracts and circuits.
-4. **Self-hosting guide** for running your own relayer and indexer against the same pools.
+1. **Admin to a multisig.** Pools are UUPS proxies controlled by a single admin key during launch. Upgrade and pause move to a multisig.
+2. **External audit** of the pool contracts and circuits.
+3. **Self-hosting guide** for running your own relayer and indexer against the same pools.
 
 ## Later
 

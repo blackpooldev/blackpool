@@ -157,11 +157,11 @@ export default function Landing() {
             <div className="lp-term" aria-hidden="true">
               <div className="td"><i /><i /><i /></div>
               <div className="tset" data-for="bridge"><div className="tl l0"><span className="c">$</span> blackpool bridge --from <b data-r="fromSlug">robinhood</b> --to <b data-r="toSlug">solana</b> --amount <b data-r="shield">1.000 ETH</b></div>
-              <div className="tl l1">proof     groth16 · 1.6 s · built from your signature</div>
+              <div className="tl l1">proof     groth16 · 1.6 s · built on your device</div>
               <div className="tl l2">intent    1Click deposit <b data-r="recipient">7Gx4…kQ2m</b> funded by one-time burner</div>
               <div className="tl l3 ok">status    delivered · <b data-r="out">2,259.40 USDC</b> · no trail</div></div>
               <div className="tset" data-for="shield"><div className="tl l0"><span className="c">$</span> blackpool shield --chain robinhood --amount 1 ETH</div><div className="tl l1">note      commitment 0x8f3a…c21e</div><div className="tl l2">tree      leaf 4 821 · root updated</div><div className="tl l3 ok">status    shielded · private balance +1.000 ETH</div></div>
-              <div className="tset" data-for="send"><div className="tl l0"><span className="c">$</span> blackpool send --to 0x9f3c…41e7 --amount 0.25 ETH</div><div className="tl l1">proof     groth16 · 1.4 s · built from your signature</div><div className="tl l2">relayer   submitted · gas paid from the note</div><div className="tl l3 ok">status    delivered · nothing to trace</div></div>
+              <div className="tset" data-for="send"><div className="tl l0"><span className="c">$</span> blackpool send --to 0x9f3c…41e7 --amount 0.25 ETH</div><div className="tl l1">proof     groth16 · 1.4 s · built on your device</div><div className="tl l2">relayer   submitted · gas paid from the note</div><div className="tl l3 ok">status    delivered · nothing to trace</div></div>
               <div className="tset" data-for="swap"><div className="tl l0"><span className="c">$</span> blackpool swap --from eth --to usdg --amount 0.5</div><div className="tl l1">burner    one-time 0x77b0…9e1f funded</div><div className="tl l2">router    Uniswap V3 · <span data-q-amt="0.5" data-q-fee="0.003" data-q-unit="USDG" data-q-dec="2" data-q-prefix="">1,134.20 USDG</span> out</div><div className="tl l3 ok">status    re-shielded · nothing links the trade</div></div>
               <div className="tset" data-for="recover"><div className="tl l0"><span className="c">$</span> blackpool recover --scan</div><div className="tl l1">registry  128 burners decrypted</div><div className="tl l2">found     0x4a1e…c0d2 · 0.25 ETH stranded</div><div className="tl l3 ok">status    swept to private balance</div></div>
             </div>
@@ -189,7 +189,7 @@ export default function Landing() {
               <span className="k">Private send</span><h3>Pay any address without linking it to you</h3><span className="arrow">↗</span>
               <div className="vis"><div className="lp-stack"><div className="lp-ghost"><span>Recipient</span><b>0x9f3c…41e7 · Base</b></div><div className="lp-mock">
                 <div className="row"><span className="big">0.25 ETH</span><span className="chip">relayer pays gas</span></div>
-                <div className="row seq"><span><span className="chk">✓</span>Proof generated from your signature</span></div>
+                <div className="row seq"><span><span className="chk">✓</span>Proof generated on your device</span></div>
                 <div className="row seq"><span><span className="chk">✓</span>Submitted by the relayer</span></div>
                 <div className="row seq"><span><span className="chk">✓</span>Delivered to 0x9f3c…41e7</span></div>
               </div></div></div>

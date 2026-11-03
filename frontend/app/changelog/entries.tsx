@@ -22,6 +22,26 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "client-side-proving", date: "Nov 3, 2026", kind: "New feature", areas: ["shield", "send", "swap", "bridge", "cli"],
+    pill: "Proofs are now built on your device",
+    title: "Client-side proving",
+    lead: "Your keys and every zero-knowledge proof stay on your device. The relayer only ever sees finished proofs.",
+    bullets: [
+      "The web app proves in a background worker and CLI 0.4.0 proves in Node. Your sign-in signature is never sent anywhere; your balance is computed on your device from public pool data.",
+      "The relayer checks its fee, simulates and broadcasts the finished proof, so it cannot change the recipient or the amount. The proving key (about 20 MB) downloads once and is checked against its SHA-256.",
+      "No browser storage: wallet state, keys and notes live in memory and are gone when the tab closes.",
+    ],
+    primary: { href: "/docs#security", text: "Read the security model" }, docs: "/docs#api",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">Proving<span>groth16 · on this device</span></div>
+        <div className="cl-row"><span>Keys and notes</span><span className="cl-pill ok">this device</span></div>
+        <div className="cl-row"><span>Proof</span><span className="cl-pill ok">this device</span></div>
+        <div className="cl-row"><span>Relayer receives</span><span className="cl-pill pend">proof only</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "mcp-servers", date: "Nov 3, 2026", kind: "New feature", areas: ["cli", "docs"],
     pill: "Blackpool as MCP tools for your agent",
     title: "MCP servers",

@@ -16,3 +16,7 @@ src/types
 
 # private credentials (API tokens, private keys) — never commit
 credentials/
+
+# generated at deploy (holds the KV id)
+ops/alerts/wrangler.toml
+ops/alerts/.wrangler/

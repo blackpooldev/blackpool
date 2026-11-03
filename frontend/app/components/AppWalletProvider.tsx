@@ -4,7 +4,7 @@ import '@rainbow-me/rainbowkit/styles.css'
 import { RainbowKitProvider } from '@rainbow-me/rainbowkit'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { useRef } from 'react'
-import { WagmiProvider, createConfig, fallback, http } from 'wagmi'
+import { WagmiProvider, createConfig, createStorage, fallback, http } from 'wagmi'
 import { base, mainnet, arbitrum, bsc } from 'wagmi/chains'
 import { defineChain } from 'viem'
 import { injected, walletConnect } from 'wagmi/connectors'
@@ -24,6 +24,14 @@ const robinhood = defineChain({
     default: { name: 'Etherscan', url: 'https://robin.etherscan.io' },
   },
 })
+
+// wagmi keeps its connection state here instead of browser storage (gone when the tab closes).
+const memory = new Map<string, string>()
+const memoryStorage = {
+  getItem: (k: string) => memory.get(k) ?? null,
+  setItem: (k: string, v: string) => { memory.set(k, v) },
+  removeItem: (k: string) => { memory.delete(k) },
+}
 
 // Create factory functions to ensure fresh instances
 const createConnectors = () => {
@@ -47,6 +55,7 @@ const createConnectors = () => {
 const createWagmiConfig = (connectors: any[]) => {
     return createConfig({
         ssr: true,
+        storage: createStorage({ storage: memoryStorage }), // in memory only, never written to the browser
         chains: [robinhood, base, mainnet, arbitrum, bsc],
         connectors,
         transports: {

@@ -56,7 +56,7 @@ export default function Docs() {
           <section id="concepts">
             <h2>Core concepts</h2>
             <h3>Private account</h3>
-            <p>When you connect a wallet, you sign a fixed message once. The signature is hashed into your spending key and your encryption key, so the same wallet reproduces the same account on any device. The app keeps the signature in memory only (no browser storage) and sends it to the relayer API with each private operation: the API derives your keys in memory to decrypt your notes and build the proof, and never stores or logs them. See the <a href="#security">security model</a> for what that means.</p>
+            <p>When you connect a wallet, you sign a fixed message once. The signature is hashed into your spending key and your encryption key, so the same wallet reproduces the same account on any device. The app keeps the signature in memory only (no browser storage) and never sends it anywhere. Your keys, your balance and every zero-knowledge proof are computed on your device; the relayer receives finished proofs only. See the <a href="#security">security model</a>.</p>
             <h3>Notes, commitments and nullifiers</h3>
             <p>A note is <code>(amount, owner, blinding)</code>. Its <em>commitment</em> is inserted in the pool's Merkle tree. To spend, you publish a <em>nullifier</em> (a hash that commits to the note without revealing it) and a proof that the note exists in the tree and that inputs equal outputs plus fees. The contract rejects a nullifier it has seen before, which is what prevents double spends.</p>
             <h3>Relayer</h3>
@@ -152,7 +152,7 @@ Result      pool → recipient. Nothing on-chain links the two.`}</Code>
 
           <section id="cli">
             <h2>CLI</h2>
-            <p>The CLI wraps the same API as the app, so agents and scripts get private payments without a ZK client of their own. Your wallet key is read from <code>BLACKPOOL_KEY</code> or stored locally with <code>chmod 600</code> and never leaves your machine; like the app, the CLI signs the sign-in message locally and sends that signature to the API.</p>
+            <p>The CLI does everything the app does, with the same local proving: it signs the sign-in message, derives your keys, scans your notes and generates proofs on your machine, then hands finished proofs to the relayer. Your wallet key is read from <code>BLACKPOOL_KEY</code> or stored locally with <code>chmod 600</code>; neither the key nor the signature leaves your machine. The proving key (about 20 MB) is downloaded once to <code>~/.blackpool/zk/</code> and checked against its SHA-256.</p>
             <Code>{`npm i -g @blackpool/cli
 blackpool login                         # hidden prompt, or set BLACKPOOL_KEY
 blackpool balance --chain base
@@ -189,7 +189,7 @@ blackpool send 0xRECIPIENT 10 --pool usdc
 
           <section id="api">
             <h2>API</h2>
-            <p>Base URL: <code>https://api.blackpool.cash</code>. Private operations carry your sign-in signature; the API derives your keys in memory for that request and stores nothing that can spend your notes. Registry calls carry a separate registry-auth signature derived from it. Rate limits per IP: 40 relay operations per minute (deposit, withdraw, swaps, burner gas) and 600 reads per minute; a <code>429</code> response includes <code>retryAfter</code> in seconds.</p>
+            <p>Base URL: <code>https://api.blackpool.cash</code>. The API never receives your sign-in signature or keys. Clients read public pool data, prove locally and post finished proofs to <code>/api/relay</code>; the relayer checks its fee, simulates and broadcasts. Registry calls carry a separate registry-auth signature derived from the sign-in signature, from which the sign-in signature cannot be recovered. Rate limits per IP: 40 relay operations per minute (deposit, withdraw, swaps, burner gas) and 600 reads per minute; a <code>429</code> response includes <code>retryAfter</code> in seconds.</p>
             <table className="dc-table">
               <thead><tr><th>Endpoint</th><th>Purpose</th></tr></thead>
               <tbody>
@@ -197,18 +197,19 @@ blackpool send 0xRECIPIENT 10 --pool usdc
                 <tr><td><code>GET /api/assets</code></td><td>Supported pools and bridge assets</td></tr>
                 <tr><td><code>GET /api/price</code></td><td>ETH and BNB spot prices</td></tr>
                 <tr><td><code>GET /api/analytics</code>, <code>/api/revenue</code></td><td>Public protocol numbers and exact relayer fees</td></tr>
-                <tr><td><code>POST /api/balance</code></td><td>Private balance and unspent notes for a pool</td></tr>
-                <tr><td><code>POST /api/deposit/prepare</code></td><td>Build the proof and unsigned transaction for a shield</td></tr>
-                <tr><td><code>POST /api/withdraw</code></td><td>Private send (up to two recipients)</td></tr>
-                <tr><td><code>POST /api/swap-private</code></td><td>Private withdraw to a one-time burner for a same-chain swap</td></tr>
-                <tr><td><code>POST /api/bridge/quote</code></td><td>Bridge quote (dry) or solver deposit address</td></tr>
-                <tr><td><code>POST /api/swap</code></td><td>Private bridge via NEAR Intents</td></tr>
+                <tr><td><code>GET /api/zk/config</code></td><td>Pools, fees and fee recipient for clients that prove locally</td></tr>
+                <tr><td><code>GET /api/zk/pool</code></td><td>One consistent snapshot of a pool: root, every leaf and encrypted note, every spent nullifier (all public on-chain data)</td></tr>
+                <tr><td><code>GET /api/zk/allowance</code></td><td>Token allowance of a depositor, before an ERC-20 shield</td></tr>
+                <tr><td><code>POST /api/relay</code></td><td>Validate, simulate and broadcast a finished withdraw proof; the relayer pays gas</td></tr>
+                <tr><td><code>POST /api/swap/quote</code></td><td>Live solver quote for a private swap or bridge; the client then proves a withdraw to the returned deposit address</td></tr>
+                <tr><td><code>POST /api/bridge/quote</code></td><td>Bridge price preview</td></tr>
                 <tr><td><code>GET /api/intent-status</code></td><td>Status of a bridge by deposit address</td></tr>
                 <tr><td><code>POST /api/intents</code></td><td>All bridges for the signed-in account</td></tr>
                 <tr><td><code>POST /api/burner/register</code>, <code>/list</code>, <code>/mark-swept</code></td><td>Encrypted burner registry for recovery (paginated list)</td></tr>
-                <tr><td><code>POST /api/burner-gas</code></td><td>Relayer tops up a burner's gas (depositors only, capped)</td></tr>
+                <tr><td><code>POST /api/burner-gas</code></td><td>Relayer tops up a burner's gas (active swaps only, capped)</td></tr>
               </tbody>
             </table>
+            <p>Deprecated: <code>POST /api/balance</code>, <code>/api/withdraw</code>, <code>/api/deposit/prepare</code>, <code>/api/swap</code> and <code>/api/swap-private</code> took the sign-in signature and proved on the server. They remain only for CLI 0.3 and older and are removed on 2026-12-03; update with <code>npm i -g @blackpool/cli@latest</code>.</p>
           </section>
 
           <section id="security">
@@ -218,7 +219,7 @@ blackpool send 0xRECIPIENT 10 --pool usdc
             <h3>What is public</h3>
             <p>That a deposit of a given amount entered a pool; that a withdrawal of a given amount left it to a given address; the fee paid. Anonymity grows with the number and variety of notes in a pool — a very unusual amount is easier to correlate.</p>
             <h3>Trust assumptions</h3>
-            <p><b>Server-assisted proving.</b> The hosted relayer API builds your proofs. To do that it receives your sign-in signature and derives your keys in memory for the length of a request; it never stores or logs them. Proofs are verified on-chain, so nobody can forge a spend, but while the API holds your keys it could spend your notes. Using the hosted app or CLI therefore means trusting the API operator during each request. Client-side proving, which removes this trust, is on the roadmap; the circuits and contracts are open source so you can run your own prover today.</p>
+            <p><b>Client-side proving.</b> Your device derives your keys from the sign-in signature, finds your notes in public pool data and generates every proof (the web app in a background worker, the CLI in Node). The relayer receives only the finished proof and its public inputs, so it cannot spend, redirect or resize your payment: changing any field invalidates the proof. What the relayer can do is refuse or delay a relay, and like any server it sees your IP address and the public data of the transactions it broadcasts. Pool data comes from our indexer; your device rebuilds the Merkle tree from it and the contract only accepts proofs against roots it has seen, so stale or wrong data makes a transaction fail rather than misdirect funds.</p>
             <p><b>Admin.</b> Every pool is a UUPS proxy controlled by a single admin key during the launch period. It can upgrade and pause pools; it cannot move notes. It will move to a multisig.</p>
             <p><b>Audit status.</b> The contracts and circuits have not been externally audited yet.</p>
             <p><b>Bridges</b> rely on NEAR Intents solvers for delivery, with refunds to the origin chain on failure.</p>
@@ -228,7 +229,7 @@ blackpool send 0xRECIPIENT 10 --pool usdc
             <h2>FAQ</h2>
             <details><summary>Do I need gas to send privately?</summary><p>No. The relayer pays gas and the fee is taken from the amount inside the proof.</p></details>
             <details><summary>What if I lose my device?</summary><p>Connect the same wallet anywhere and sign once. Your account, notes, burners and bridge history are all derived or re-indexed from that signature.</p></details>
-            <details><summary>Can the team see my balance?</summary><p>Nothing about your balance is stored. When you open the app, the API computes your balance in memory from your signature and forgets it after the response; see the security model for the trust this implies.</p></details>
+            <details><summary>Can the team see my balance?</summary><p>No. Your device downloads the pool's public, encrypted notes and decrypts its own locally. The server never receives your signature or keys, so it cannot tell which notes are yours.</p></details>
             <details><summary>Why is there a minimum amount?</summary><p>Fees are deducted from each spend; the minimum keeps every spend meaningfully above its own fee.</p></details>
           </section>
 
