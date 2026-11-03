@@ -454,6 +454,10 @@ async function broadcastAndWait(signer, provider, txRequest, { label = 'transact
       if (i < 5) await new Promise(r => setTimeout(r, 700 * (i + 1)))
     }
   }
+  if (!sent) {
+    // The node may have accepted the tx and still answered with an error: look for it before giving up.
+    try { if (await withRpcRetry(() => provider.getTransaction(txHash), { label: `${label} (lookup)` })) sent = true } catch {}
+  }
   if (!sent) throw new Error(`${label}: could not broadcast after repeated connection drops`)
 
   // Poll for the receipt ourselves (retrying connection errors) instead of tx.wait(), which throws
@@ -1318,11 +1322,12 @@ async function cmdSwap(args) {
   let maxFee = feePerGas
   const maxAffordable = burnerEth.div(gasLimit)
   if (maxFee.gt(maxAffordable)) maxFee = maxAffordable.mul(9).div(10) // 90% of ceiling
+  // BNB Chain enforces a 0.05 gwei minimum on the effective price; an EIP-1559 tip of maxFee/10 falls below it.
+  const feeFields = C.legacyGas ? { gasPrice: maxFee } : { maxFeePerGas: maxFee, maxPriorityFeePerGas: maxFee.div(10) }
   const rtx = await broadcastAndWait(burner, provider, {
     to: prep.to, data: prep.data, value: reshieldVal,
     gasLimit,
-    maxFeePerGas: maxFee,
-    maxPriorityFeePerGas: maxFee.div(10),
+    ...feeFields,
   }, { label: 'reshield' })
 
   await returnUnusedGas(burner, provider, chain)

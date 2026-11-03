@@ -281,6 +281,27 @@ const WalletIcon = () => (
 // so a swap's own reshield and the auto-recovery never broadcast for the same burner at once.
 const busyBurners = new Set<string>()
 
+// The same lock across tabs (Web Locks API): two open tabs of the app must never work on one burner at once.
+type LockManagerLike = { request: (name: string, opts: object | (() => Promise<unknown>), cb?: (lock: unknown) => Promise<unknown>) => Promise<unknown> }
+const lockManager = (): LockManagerLike | null => (typeof navigator !== 'undefined' && (navigator as unknown as { locks?: LockManagerLike }).locks) || null
+const burnerLockName = (addr: string) => `blackpool-burner-${addr.toLowerCase()}`
+// Hold the burner's lock until the returned release() is called (used by a swap for its own fresh burner).
+async function holdBurnerLock(addr: string): Promise<() => void> {
+  const lm = lockManager()
+  if (!lm) return () => {}
+  let release: () => void = () => {}
+  await new Promise<void>((acquired) => {
+    lm.request(burnerLockName(addr), () => new Promise<void>((done) => { release = () => done(); acquired() })).catch(() => acquired())
+  })
+  return release
+}
+// Run fn only if no other tab holds the burner's lock; returns false when skipped.
+async function withBurnerLockIfFree(addr: string, fn: () => Promise<unknown>): Promise<boolean> {
+  const lm = lockManager()
+  if (!lm) { await fn(); return true }
+  return (await lm.request(burnerLockName(addr), { ifAvailable: true }, async (lock) => { if (!lock) return false; await fn(); return true })) as boolean
+}
+
 // After a reshield: send the burner's unused gas back to the relayer that advanced it, so no funds stay on the burner.
 // Keeps only this transfer's cost (+30%, plus an L1 data-fee cushion on Base). Never throws.
 async function returnUnusedGas(bw: ethers.Wallet, provider: ethers.Provider, chain: string): Promise<void> {
@@ -604,7 +625,8 @@ export default function Home() {
           // error, or a fix deployed mid-session). We only guard against double-firing WHILE trading,
           // not against ever retrying — the old "leave set on failure" logic permanently wedged a burner
           // whose first attempt failed before a fix, so it never recovered even once conditions were fixed.
-          recoverBurner(hit.pool, hit.raw, hit.privateKey, hit.chain).catch(() => { autoRecoverRef.current = null })
+          const h = hit
+          withBurnerLockIfFree(h.address, () => recoverBurner(h.pool, h.raw, h.privateKey, h.chain)).catch(() => { autoRecoverRef.current = null })
         }
       } catch { /* ignore */ }
     }
@@ -1198,6 +1220,8 @@ export default function Home() {
         }
       }
       if (prep.approveTx) await sendResilient({ to: prep.approveTx.to, data: prep.approveTx.data, value: BigInt(0), gasLimit: BigInt(80000) })
+      // Simulate first: if another tab or device already moved these funds, stop here instead of paying for a revert.
+      await provider.call({ from: bw.address, to: prep.to, data: prep.data, value: BigInt(prep.value || '0') })
       await sendResilient({ to: prep.to, data: prep.data, value: BigInt(prep.value || '0'), gasLimit: RESHIELD_GAS })
       setStepper({ steps, active: steps.length, error: null })
       await returnUnusedGas(bw, provider, recoverChain)
@@ -1261,6 +1285,7 @@ export default function Home() {
     // must NOT claim "funds safe on burner, recovery will retry" (there's nothing on the burner).
     let fundedBurner = false
     let swapBurner = ''
+    let releaseSwapLock: () => void = () => {}
     try {
       // 0) fresh RANDOM ephemeral burner, registered (encrypted key) BEFORE funding so a stall at
       // any later step is always recoverable from any device. No slots, no nonce scan, never "stuck".
@@ -1269,6 +1294,7 @@ export default function Home() {
       const bw = burnerWallet(bState, provider)
       swapBurner = bState.address.toLowerCase()
       busyBurners.add(swapBurner) // the background scanner must not reshield this burner while we do
+      releaseSwapLock = await holdBurnerLock(swapBurner) // ...nor a scanner in another tab
 
       // 1) withdraw private → burner (relayer). Server owns retry semantics.
       setStatus('submitting to relayer...')
@@ -1468,6 +1494,7 @@ export default function Home() {
       setPrivateBalanceChanged(prev => prev + 1)
     } finally {
       if (swapBurner) busyBurners.delete(swapBurner) // a failed swap's burner is now fair game for auto-recovery
+      releaseSwapLock()
       setIsTrading(false)
     }
   }
@@ -1614,7 +1641,7 @@ export default function Home() {
                 <div style={{ fontSize: 12, color: '#c7cfdb', lineHeight: 1.4 }}>
                   A previous swap left <b>{stuckBurner.display} {stuckBurner.sym}</b> on your one-time burner. Finishing it automatically - your {stuckBurner.sym} will land in your private balance. You can also tap below to retry.
                 </div>
-                <button className="btn btn-primary btn-sm" disabled={isTrading} onClick={() => { recoverBurner(stuckBurner.pool, stuckBurner.raw, stuckBurner.privateKey, stuckBurner.chain).catch(() => {}) }} style={{ alignSelf: 'flex-start' }}>
+                <button className="btn btn-primary btn-sm" disabled={isTrading} onClick={() => { const sb = stuckBurner; withBurnerLockIfFree(new ethers.Wallet(sb.privateKey).address, () => recoverBurner(sb.pool, sb.raw, sb.privateKey, sb.chain)).catch(() => {}) }} style={{ alignSelf: 'flex-start' }}>
                   <span>{isTrading ? 'Recovering…' : `Recover ${stuckBurner.display} ${stuckBurner.sym}`}</span>
                 </button>
               </div>
