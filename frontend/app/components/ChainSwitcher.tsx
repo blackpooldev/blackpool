@@ -1,7 +1,7 @@
 'use client'
 import { useState, useRef, useEffect } from 'react'
 import { useAccount } from 'wagmi'
-import { switchWalletChain } from '../lib/walletChain'
+import { switchWalletChain, SwitchError } from '../lib/walletChain'
 
 // full:true = chain has private pools (shield/send/swap/withdraw). full:false = bridge destination only.
 const CHAINS = [
@@ -23,6 +23,7 @@ export function ChainSwitcher() {
   const [note, setNote] = useState<string | null>(null)
   const { chainId, isConnected, connector } = useAccount()
   const ref = useRef<HTMLDivElement>(null)
+  const pending = useRef<AbortController | null>(null)
 
   useEffect(() => {
     if (!open) return
@@ -45,13 +46,16 @@ export function ChainSwitcher() {
     setNote(null)
     if (id === chainId) return
     if (!isConnected) { setNote('Connect a wallet first.'); return }
+    pending.current?.abort() // a new pick replaces the previous wait
+    const ctl = new AbortController()
+    pending.current = ctl
     setSwitching(id)
     try {
-      await switchWalletChain(connector, id)
+      await switchWalletChain(connector, id, { signal: ctl.signal })
     } catch (e: any) {
-      setNote(e?.message || 'The wallet could not switch network.')
+      if (!(e instanceof SwitchError && e.kind === 'cancelled')) setNote(e?.message || 'The wallet could not switch network.')
     } finally {
-      setSwitching(null)
+      if (pending.current === ctl) { pending.current = null; setSwitching(null) }
     }
   }
 
@@ -69,7 +73,7 @@ export function ChainSwitcher() {
       >
         <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           {active.logo ? <img src={active.logo} style={{ width: 16, height: 16, flexShrink: 0 }} alt="" /> : <span style={{ width: 8, height: 8, borderRadius: 4, background: '#b4884d', flexShrink: 0 }} />}
-          <span className="chain_name">{switching ? 'Switching...' : active.name}</span>
+          <span className="chain_name">{switching ? 'Confirm in wallet' : active.name}</span>
         </span>
         <div style={{ width: 16, height: 16, transform: open ? 'rotate(180deg)' : 'none', transition: 'transform .15s' }}>
           <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.7 14.7a1 1 0 01-1.4 0l-5-5a1 1 0 011.4-1.4L12 12.6l4.3-4.3a1 1 0 011.4 1.4l-5 5z" /></svg>
