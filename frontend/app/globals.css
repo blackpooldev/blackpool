@@ -950,3 +950,16 @@ a:has(.icon_btn) {
 .net-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 12px; padding: 10px 12px; border: 1px solid rgba(180,136,77,.45); background: rgba(180,136,77,.10); border-radius: 12px; font-size: 13px; color: #e0a64a; }
 .net-banner button { flex: none; border: 0; border-radius: 999px; padding: 7px 12px; background: var(--color-fg, #ebecec); color: var(--color-bg, #0b0c0e); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
 @media (max-width: 560px) { .net-banner { flex-direction: column; align-items: stretch; } }
+
+/* code blocks — landing palette: commands white, flags blue, strings green, numbers amber, keywords/env purple, comments dim */
+.hl-wrap { position: relative; }
+pre.hl { position: relative; margin: 0; background: linear-gradient(#1B1B1D, #1B1B1D) 0 36px / 100% 1px no-repeat, #0B0C0E; border: 1px solid #232427; border-radius: 12px; padding: 50px 18px 16px; overflow-x: auto; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12.75px; line-height: 1.7; color: #C9CACC; }
+pre.hl::before { content: ""; position: absolute; top: 14px; left: 16px; width: 9px; height: 9px; border-radius: 50%; background: #2A2B2F; box-shadow: 14px 0 0 #2A2B2F, 28px 0 0 #2A2B2F; }
+pre.hl::after { content: attr(data-lang); position: absolute; top: 10px; left: 62px; font-size: 11px; letter-spacing: .04em; color: #6E7074; }
+pre.hl code { display: block; background: none !important; border: 0 !important; padding: 0 !important; white-space: pre; color: inherit; font: inherit; }
+.hl-wrap .hl-copy { position: absolute; top: 6px; right: 8px; height: 24px; padding: 0 10px; border-radius: 7px; border: 1px solid #232427; background: #121316; color: #A4A5A5; font: 500 11.5px/1 'Inter', system-ui, sans-serif; cursor: pointer; opacity: .85; transition: color .15s ease, border-color .15s ease, opacity .15s ease; }
+.hl-wrap .hl-copy:hover { color: #EBECEC; border-color: #3a3b3f; opacity: 1; } .hl-wrap .hl-copy.ok { color: #34C77B; border-color: rgba(52,199,123,.4); }
+.hl-cmd { color: #EBECEC; font-weight: 600; } .hl-sub, .hl-key { color: #EBECEC; }
+.hl-f, .hl-fn, .hl-u { color: #5B8DEF; } .hl-s { color: #34C77B; } .hl-n { color: #E9A23B; } .hl-k, .hl-v { color: #8F7BF2; }
+.hl-c, .hl-p, .hl-pun, .hl-o { color: #6E7074; }
+pre.hl-inline code { color: #C9CACC; }

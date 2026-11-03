@@ -43,8 +43,7 @@
 .ag-md a:hover { border-bottom-color: var(--fg2); }
 .ag-md strong { color: var(--fg); font-weight: 600; }
 .ag-md :not(pre) > code { background: var(--s2); border: 1px solid var(--b2); border-radius: 5px; padding: 1px 5px; color: var(--fg); }
-.ag-md pre { margin: 0 0 18px; background: var(--s1); border: 1px solid var(--b1); border-radius: 12px; padding: 14px 16px; overflow-x: auto; font-size: 12.5px; line-height: 1.65; color: var(--fg); }
-.ag-md pre code { background: none; border: 0; padding: 0; white-space: pre; }
+.ag-md .hl-wrap { margin: 0 0 18px; }
 .ag-table { overflow-x: auto; margin: 0 0 18px; border: 1px solid var(--b1); border-radius: 12px; }
 .ag-md table { width: 100%; border-collapse: collapse; font-size: 13.5px; line-height: 1.5; }
 .ag-md th { text-align: left; font-weight: 500; color: var(--dim); font-size: 12px; padding: 9px 12px; background: var(--s1); border-bottom: 1px solid var(--b1); white-space: nowrap; }

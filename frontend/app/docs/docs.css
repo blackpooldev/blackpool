@@ -42,6 +42,7 @@
 .dc-steps { margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.6; color: var(--fg2); }
 .dc-steps b { color: var(--fg); font-weight: 600; }
 .dc-list { margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.6; color: var(--fg2); }
+.dc-main .hl-wrap { margin: 6px 0 16px; }
 .dc-code { background: var(--s1); border: 1px solid var(--b1); border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 6px 0 16px; }
 .dc-code code { background: none; border: 0; padding: 0; font-size: 13px; line-height: 1.65; color: var(--fg2); white-space: pre; }
 .dc-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 6px 0 14px; border: 1px solid var(--b1); border-radius: 12px; overflow: hidden; }

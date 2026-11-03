@@ -4,6 +4,8 @@ import Link from "next/link";
 import { marked } from "marked";
 import Mark from "../components/Mark";
 import AgentActions from "./AgentActions";
+import CodeCopy from "../components/CodeCopy";
+import { highlight } from "../lib/highlight";
 import "../changelog/changelog.css";
 import "../components/subpage.css";
 import "./agents.css";
@@ -40,6 +42,11 @@ function load() {
     const rows = token.rows.map((r) => `<tr>${r.map((c) => `<td>${this.parser.parseInline(c.tokens)}</td>`).join("")}</tr>`).join("");
     return `<div class="ag-table"><table><thead><tr>${head}</tr></thead><tbody>${rows}</tbody></table></div>`;
   };
+  const LABEL: Record<string, string> = { sh: "shell", bash: "shell", "": "shell", js: "javascript", javascript: "javascript", py: "python", python: "python", json: "json", text: "text" };
+  renderer.code = function ({ text, lang }) {
+    const l = (lang || "").trim().split(/\s+/)[0];
+    return `<pre class="hl" data-lang="${LABEL[l] ?? l}"><code>${highlight(text, l)}</code></pre>\n`;
+  };
   const html = marked.parse(body, { renderer, gfm: true, async: false }) as string;
   const bytes = Buffer.byteLength(md, "utf8");
   return { html, toc, prompt, size: `${(bytes / 1024).toFixed(1)} KB`, lines: md.split("\n").length };
@@ -73,17 +80,17 @@ export default function Agents() {
         <section className="ag-start">
           <div className="ag-card">
             <div className="ag-card-h"><span>1</span>Give your agent the guide</div>
-            <pre className="ag-cmd"><code>curl -fsSL {RAW_URL} -o AGENTS.md</code></pre>
+            <pre className="ag-cmd hl-inline"><code dangerouslySetInnerHTML={{ __html: highlight(`curl -fsSL ${RAW_URL} -o AGENTS.md`, "sh") }} /></pre>
             <p>Or paste the instructions block (Copy for your agent) into its system prompt.</p>
           </div>
           <div className="ag-card">
             <div className="ag-card-h"><span>2</span>Install the CLI</div>
-            <pre className="ag-cmd"><code>npm i -g @blackpool/cli</code></pre>
+            <pre className="ag-cmd hl-inline"><code dangerouslySetInnerHTML={{ __html: highlight("npm i -g @blackpool/cli", "sh") }} /></pre>
             <p>Node.js 18+. Or run any command with <code>npx -y @blackpool/cli@latest</code>.</p>
           </div>
           <div className="ag-card">
             <div className="ag-card-h"><span>3</span>Give it a wallet</div>
-            <pre className="ag-cmd"><code>export BLACKPOOL_KEY=0x…{"\n"}export BLACKPOOL_JSON=1</code></pre>
+            <pre className="ag-cmd hl-inline"><code dangerouslySetInnerHTML={{ __html: highlight("export BLACKPOOL_KEY=0x…\nexport BLACKPOOL_JSON=1", "sh") }} /></pre>
             <p>A dedicated agent wallet, never your main one. Every command then answers in JSON.</p>
           </div>
         </section>
@@ -95,6 +102,7 @@ export default function Agents() {
             <a className="ag-toc-dl" href="/AGENTS.md" download="AGENTS.md">Download AGENTS.md ↓</a>
           </aside>
           <article className="ag-md" dangerouslySetInnerHTML={{ __html: html }} />
+          <CodeCopy />
         </div>
 
         <footer className="sp-foot ag-foot">

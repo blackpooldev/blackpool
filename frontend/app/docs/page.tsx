@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Mark from "../components/Mark";
 import "./docs.css";
+import CodeCopy from "../components/CodeCopy";
+import { highlight } from "../lib/highlight";
 
 export const metadata = {
   title: "Docs — Blackpool",
@@ -13,8 +15,8 @@ const NAV = [
   ["fees", "Fees & limits"], ["cli", "CLI"], ["agents", "Agents"], ["api", "API"], ["security", "Security model"], ["faq", "FAQ"],
 ];
 
-function Code({ children }: { children: string }) {
-  return <pre className="dc-code"><code>{children}</code></pre>;
+function Code({ children, lang = "sh" }: { children: string; lang?: string }) {
+  return <pre className="hl" data-lang={lang === "sh" ? "shell" : lang}><code dangerouslySetInnerHTML={{ __html: highlight(children, lang) }} /></pre>;
 }
 
 export default function Docs() {
@@ -234,6 +236,7 @@ blackpool send 0xRECIPIENT 10 --pool usdc
             <nav><Link href="/">Home</Link><Link href="/app">App</Link><Link href="/recover">Recover</Link></nav>
           </footer>
         </article>
+        <CodeCopy />
       </div>
     </main>
   );
