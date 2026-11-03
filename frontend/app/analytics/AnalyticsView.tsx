@@ -129,7 +129,7 @@ export default function AnalyticsView() {
         </div>
       </section>
 
-      <p className="an-foot">{data?.generatedAt ? `Generated ${new Date(data.generatedAt).toLocaleString()} · refreshed every minute` : "Data refreshes every minute once pools are live."} · Source: pool contracts via the Blackpool indexer. Amounts are never read; only public commitments are counted.</p>
+      <p className="an-foot">{data?.generatedAt ? `Generated ${new Date(data.generatedAt).toISOString().replace("T", " ").slice(0, 16) + " UTC"} · daily and monthly totals in UTC · refreshed every minute` : "Data refreshes every minute once pools are live."} · Source: pool contracts via the Blackpool indexer. Amounts are never read; only public commitments are counted.</p>
     </div>
   );
 }

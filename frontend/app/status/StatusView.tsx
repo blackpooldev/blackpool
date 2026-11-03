@@ -117,7 +117,7 @@ export default function StatusView() {
       </section>
 
       <section>
-        <p className="st-meta">{at ? `Checked ${at.toLocaleString()} from your browser.` : "Running checks…"} If the API is down, funds stay safe in the pools and on burners; private operations resume when it is back.</p>
+        <p className="st-meta">{at ? `Checked ${at.toISOString().replace("T", " ").slice(0, 16) + " UTC"} from your browser.` : "Running checks…"} If the API is down, funds stay safe in the pools and on burners; private operations resume when it is back.</p>
         <button className="st-refresh" onClick={run} disabled={busy}>{busy ? "Checking…" : "Check again"}</button>
       </section>
     </>
