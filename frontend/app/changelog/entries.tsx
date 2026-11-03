@@ -22,6 +22,25 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "mcp-servers", date: "Nov 3, 2026", kind: "New feature", areas: ["cli", "docs"],
+    pill: "Blackpool as MCP tools for your agent",
+    title: "MCP servers",
+    lead: "Agent apps can use Blackpool as tools over the Model Context Protocol, no shell required.",
+    bullets: [
+      "Local server in the CLI (npx -y @blackpool/cli@latest mcp): balance, deposit, send, swap, bridge, bridges, assets and recover, with the wallet key kept on your machine and an allow-list per tool.",
+      "Hosted read-only server at mcp.blackpool.cash/mcp: status, fees and minimums, bridge assets and quotes, analytics and the agent guide.",
+    ],
+    primary: { href: "/agents#9-mcp-servers", text: "Set it up" }, docs: "/AGENTS.md",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">MCP<span>stdio · streamable HTTP</span></div>
+        <div className="cl-row"><span className="mono">blackpool_balance</span><span className="cl-pill ok">read-only</span></div>
+        <div className="cl-row"><span className="mono">blackpool_send</span><span className="cl-pill pend">destructive</span></div>
+        <div className="cl-row"><span className="mono">blackpool_bridge_quote</span><span className="cl-pill ok">hosted</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "built-for-agents", date: "Nov 3, 2026", kind: "New feature", areas: ["cli", "docs"],
     pill: "AGENTS.md: private payments for AI agents",
     title: "Built for agents",

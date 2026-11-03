@@ -264,7 +264,7 @@ export default function Landing() {
             <div className="lp-ag-copy">
               <p className="lp-ag-eyebrow">Built for agents</p>
               <h2>Your agent can pay privately too.</h2>
-              <p>The Blackpool CLI answers in JSON with stable exit codes, and one file, AGENTS.md, tells an agent everything: setup, every command, limits, recipes, errors and the safety rules.</p>
+              <p>The Blackpool CLI answers in JSON with stable exit codes and runs as an MCP server, and one file, AGENTS.md, tells an agent everything: setup, every command, limits, recipes, errors and the safety rules.</p>
               <div className="lp-ag-cta">
                 <Link href="/agents" className="lp-btn pri">Read AGENTS.md</Link>
                 <a href="/AGENTS.md" download="AGENTS.md" className="lp-btn">Download</a>

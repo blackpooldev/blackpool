@@ -8,6 +8,7 @@ Private payments for AI agents and scripts. This file is the complete guide to u
 | Mirrors | https://raw.githubusercontent.com/blackpooldev/blackpool/main/AGENTS.md · inside the npm package at `node_modules/@blackpool/cli/AGENTS.md` |
 | Index for LLMs | https://blackpool.cash/llms.txt |
 | CLI | [`@blackpool/cli`](https://www.npmjs.com/package/@blackpool/cli) — Node.js 18+ |
+| MCP | local: `npx -y @blackpool/cli@latest mcp` · hosted read-only: `https://mcp.blackpool.cash/mcp` (§9) |
 | API | `https://api.blackpool.cash` (the CLI calls it for you) |
 | Live status | https://blackpool.cash/status |
 | Human docs | https://blackpool.cash/docs |
@@ -26,6 +27,8 @@ blackpool deposit 25 --pool usdc --chain base          # shield 25 USDC (the onl
 blackpool send 0xRECIPIENT 10 --pool usdc --chain base # private payment, relayer pays gas
 blackpool balance --chain base --pool usdc             # → {"ok":true,…,"balance":"13.965",…}
 ```
+
+Agent app with MCP support? Skip the shell entirely: see §9.
 
 Paste this into your agent's instructions:
 
@@ -318,7 +321,83 @@ Implement it with the Node or Python wrapper above. Allow-list the first argumen
 
 ---
 
-## 9. Output contract
+## 9. MCP servers
+
+Blackpool speaks the [Model Context Protocol](https://modelcontextprotocol.io), so any MCP-capable agent app can call it as tools instead of running shell commands. There are two servers.
+
+### 9.1 Local server — payments (recommended)
+
+Runs on your machine over stdio and exposes the full CLI as tools. The wallet key stays in the local environment; tools behave exactly like the commands in §4 and return the same JSON.
+
+Add it to your app's MCP configuration (most apps use this `mcpServers` format):
+
+```json
+{
+  "mcpServers": {
+    "blackpool": {
+      "command": "npx",
+      "args": ["-y", "@blackpool/cli@latest", "mcp"],
+      "env": {
+        "BLACKPOOL_KEY": "0x<agent-wallet-private-key>",
+        "BLACKPOOL_MCP_TOOLS": "balance,send,bridges"
+      }
+    }
+  }
+}
+```
+
+With the CLI installed globally, `"command": "blackpool", "args": ["mcp"]` works too. Apps that add servers from a terminal take the same command: `npx -y @blackpool/cli@latest mcp`.
+
+| Tool | Does | Annotations |
+|---|---|---|
+| `blackpool_address` | Agent wallet address | read-only |
+| `blackpool_balance` | Private and public balances (`chain`, `pool`, `wait`) | read-only |
+| `blackpool_deposit` | Shield from the agent wallet (`amount`, `pool`, `chain`) | destructive |
+| `blackpool_send` | Private payment (`recipient`, `amount`, `pool`, `chain`) | destructive |
+| `blackpool_swap` | Private same-chain swap (`amount`, `from`, `chain`, `slippage_bps`) | destructive |
+| `blackpool_bridge` | Private bridge (`dest_asset`, `recipient`, `amount`, `from`, `wait`) | destructive |
+| `blackpool_bridges` | Bridge history and status | read-only |
+| `blackpool_assets` | Bridge destinations and origins | read-only |
+| `blackpool_recover` | Sweep stranded burners (`chain`, `to`) | idempotent |
+
+Resource: `blackpool://agents.md` (this guide).
+
+Limit what the agent can do from the configuration:
+
+| Variable | Effect |
+|---|---|
+| `BLACKPOOL_MCP_TOOLS` | Comma-separated allow-list, e.g. `balance,send,bridges` (with or without the `blackpool_` prefix). |
+| `BLACKPOOL_MCP_READONLY` | `1` exposes only read-only tools. |
+| `BLACKPOOL_HOME`, `BLACKPOOL_API` | Same as for the CLI (§3.2). |
+
+Every tool result carries the command's JSON as `structuredContent` (and as text); `isError` is `true` when `"ok": false`. The retry rules in §12 apply unchanged: never repeat `blackpool_deposit`, `blackpool_send`, `blackpool_swap` or `blackpool_bridge` after a timeout without checking `blackpool_balance` or `blackpool_bridges` first.
+
+### 9.2 Hosted server — read-only
+
+`https://mcp.blackpool.cash/mcp` (Streamable HTTP, no sign-in). It never receives keys or signatures, so it can only answer questions:
+
+| Tool | Returns |
+|---|---|
+| `blackpool_status` | API health, configured pools, relayer gas per chain |
+| `blackpool_fees` | Flat fee, rate, minimum deposit and minimum spend per pool |
+| `blackpool_assets` | Bridge destinations and origins |
+| `blackpool_bridge_quote` | Indicative quote (`from`, `to`, `amount`) |
+| `blackpool_analytics` | Shielded notes per chain and pool, relayer fees |
+| `blackpool_guide` | This guide, whole or one section (`section`) |
+
+```json
+{
+  "mcpServers": {
+    "blackpool-info": { "url": "https://mcp.blackpool.cash/mcp" }
+  }
+}
+```
+
+Use the hosted server to plan (fees, routes, quotes, status) and the local server to act.
+
+---
+
+## 10. Output contract
 
 - stdout: exactly one line of JSON when `--json` (or `BLACKPOOL_JSON=1`) is set. stderr: human progress, safe to log.
 - Envelope: `{"ok": true, "command": "<name>", …fields}` or `{"ok": false, "command": "<name>", "error": "<message>"}`.
@@ -328,7 +407,7 @@ Implement it with the Node or Python wrapper above. Allow-list the first argumen
 
 ---
 
-## 10. Errors and what to do
+## 11. Errors and what to do
 
 | `error` contains | Meaning | Do |
 |---|---|---|
@@ -348,7 +427,7 @@ Implement it with the Node or Python wrapper above. Allow-list the first argumen
 
 ---
 
-## 11. Retries, timeouts, concurrency
+## 12. Retries, timeouts, concurrency
 
 - Safe to retry any time: `address`, `balance`, `assets`, `bridges`, `recover`, `version`, `latest`.
 - **Not** safe to retry blindly: `deposit`, `send`, `swap`, `bridge`. A timeout can mean the transaction landed. Check `balance --wait` (or `bridges`) and only retry if the balance is unchanged.
@@ -358,7 +437,7 @@ Implement it with the Node or Python wrapper above. Allow-list the first argumen
 
 ---
 
-## 12. Security
+## 13. Security
 
 - **Dedicated agent wallet.** Fund it with only what the agent may spend. Never use a personal or treasury key.
 - `BLACKPOOL_KEY` never leaves the machine: it signs the sign-in message, deposit approvals and deposit transactions locally.
@@ -369,7 +448,7 @@ Implement it with the Node or Python wrapper above. Allow-list the first argumen
 
 ---
 
-## 13. Direct API (advanced)
+## 14. Direct API (advanced)
 
 The CLI is the supported interface. If you cannot run Node.js, the same operations are HTTP calls on `https://api.blackpool.cash` (`/api/balance`, `/api/deposit/prepare`, `/api/withdraw`, `/api/swap-private`, `/api/bridge/quote`, `/api/swap`, `/api/intents`, `/api/burner/*`, `/api/health`), all JSON. They need the sign-in signature (EIP-191 signature of the exact message below by the agent wallet), and deposits need you to sign and broadcast the returned transaction yourself. Endpoint list: https://blackpool.cash/docs#api
 
@@ -388,6 +467,6 @@ The message is part of the account: a different message, even by one character, 
 
 ---
 
-## 14. Working on this repository
+## 15. Working on this repository
 
 If you are a coding agent editing this repository rather than using the CLI: the CLI lives in `cli/`, contracts in `contracts/`, circuits in `circuits/`, client libraries in `src/`, the web app in `frontend/`. Run `npx hardhat test` before changing contracts or core libraries. Keep the sign-in message, note format and circuit byte-identical across `src/`, `cli/` and `frontend/` (changing any of them changes every account). Never commit keys, `.env` files or credentials. Keep this file in sync with `cli/bin/blackpool.js` when commands or output fields change.

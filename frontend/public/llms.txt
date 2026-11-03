@@ -5,6 +5,7 @@
 ## For agents
 - [AGENTS.md](https://blackpool.cash/AGENTS.md): complete guide for AI agents and scripts — setup, every CLI command, JSON output fields, chains, fees and minimums, bridging, recipes, integration code (Node, Python, tool definition), errors, retry rules, security.
 - [npm package](https://www.npmjs.com/package/@blackpool/cli): `npm i -g @blackpool/cli`
+- MCP: local server `npx -y @blackpool/cli@latest mcp` (payments, key stays local); hosted read-only server `https://mcp.blackpool.cash/mcp` (status, fees, assets, quotes, analytics, guide)
 
 ## Docs
 - [Docs](https://blackpool.cash/docs): how the pools work, shield, private send, swap, private bridge, recovery

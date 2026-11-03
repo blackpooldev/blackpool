@@ -131,3 +131,13 @@ Docs: [docs.blackpool.cash/agents](https://docs.blackpool.cash/agents) · Site: 
 ## Agents
 
 Run any command with `--json` (or `BLACKPOOL_JSON=1`) to get one JSON object on stdout and progress on stderr; exit codes are `0` ok, `1` failed, `2` usage. [`AGENTS.md`](AGENTS.md) (also at https://blackpool.cash/AGENTS.md) documents every command's fields, minimums, retry rules and security notes.
+
+## MCP
+
+`blackpool mcp` runs a Model Context Protocol server over stdio, so agent apps can call Blackpool as tools:
+
+```json
+{ "mcpServers": { "blackpool": { "command": "npx", "args": ["-y", "@blackpool/cli@latest", "mcp"], "env": { "BLACKPOOL_KEY": "0x..." } } } }
+```
+
+`BLACKPOOL_MCP_TOOLS=balance,send` limits the tools, `BLACKPOOL_MCP_READONLY=1` exposes read-only ones. A hosted read-only server (status, fees, assets, quotes, analytics, guide) runs at `https://mcp.blackpool.cash/mcp`. Details: [AGENTS.md §9](AGENTS.md).

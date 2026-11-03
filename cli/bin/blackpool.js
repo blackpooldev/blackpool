@@ -1358,6 +1358,7 @@ ${color('Commands:', c.bold)}
                                  Run 'blackpool assets' for the destination list.
   assets                         List supported bridge destination assets.
   bridges                        List your cross-chain bridges + status (where a refund went).
+  mcp                            Run a Model Context Protocol server over stdio (agent apps).
   recover [--to <addr>] [--chain]   Sweep any stranded funds from burner wallets.
                                  --chain all sweeps every chain in one run (idempotent).
   version                        Print CLI version.
@@ -1418,6 +1419,7 @@ async function main() {
       case 'login':   await cmdLogin();          break
       case 'logout':  await cmdLogout();         break
       case 'address': await cmdAddress();        break
+      case 'mcp':     await require('./mcp.js').serve(); process.exit(0)
       case 'balance': await cmdBalance(args);    break
       case 'deposit': await cmdDeposit(args);    break
       case 'send':    await cmdSend(args);       break

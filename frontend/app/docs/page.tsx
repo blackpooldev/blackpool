@@ -181,6 +181,7 @@ blackpool send 0xRECIPIENT 10 --pool usdc
                 <tr><td>Never blindly retry <code>deposit</code>, <code>send</code>, <code>swap</code>, <code>bridge</code></td><td>A timeout can mean it landed; check <code>balance --wait</code> or <code>bridges</code> first.</td></tr>
                 <tr><td>Give commands at least 3 minutes</td><td>Each private operation builds a proof (about 30–90 s).</td></tr>
                 <tr><td>Use <code>bridge --no-wait</code> in loops</td><td>Returns once the solver has the funds; poll <code>bridges</code> later.</td></tr>
+                <tr><td>Agent app with MCP support</td><td>Run the local server <code>npx -y @blackpool/cli@latest mcp</code> (all tools, key stays local) or connect the read-only <code>https://mcp.blackpool.cash/mcp</code>.</td></tr>
                 <tr><td>Treat <code>~/.blackpool/config.json</code> like a key</td><td>It caches the sign-in signature, which can spend the private balance. <code>BLACKPOOL_HOME</code> moves it.</td></tr>
               </tbody>
             </table>

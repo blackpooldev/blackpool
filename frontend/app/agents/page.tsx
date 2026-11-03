@@ -73,6 +73,7 @@ export default function Agents() {
           <div className="ag-facts">
             <span><b>Markdown</b> · {size} · {lines} lines</span>
             <span><b>Readable by any agent</b> · no JavaScript, no bot challenge</span>
+            <span><b>MCP</b> · <a href="#9-mcp-servers">local and hosted servers</a></span>
             <span><b>Also in</b> <a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer">the npm package</a> · <a href="https://github.com/blackpooldev/blackpool/blob/main/AGENTS.md" target="_blank" rel="noopener noreferrer">GitHub</a> · <a href="/llms.txt">llms.txt</a></span>
           </div>
         </div>
