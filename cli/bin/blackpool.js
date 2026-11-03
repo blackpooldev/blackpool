@@ -496,6 +496,16 @@ async function chainGasOverrides(provider, chain) {
   const maxPriorityFeePerGas = maxFeePerGas.lt(minPrio) ? maxFeePerGas : minPrio
   return { maxFeePerGas, maxPriorityFeePerGas }
 }
+// Burner txs inside one swap: 2 x baseFee + tip (headroom for the minute or two the swap takes), capped.
+async function burnerFees(provider, chain) {
+  if (CHAINS[chain].legacyGas) return chainGasOverrides(provider, chain)
+  const cap = ethers.utils.parseUnits(CHAINS[chain].gasCapGwei, 'gwei')
+  const tip = ethers.utils.parseUnits('0.001', 'gwei')
+  let want
+  try { const b = await provider.getBlock('latest'); if (b && b.baseFeePerGas) want = b.baseFeePerGas.mul(2).add(tip) } catch {}
+  const maxFeePerGas = want && want.lt(cap) ? want : cap
+  return { maxFeePerGas, maxPriorityFeePerGas: maxFeePerGas.lt(tip) ? maxFeePerGas : tip }
+}
 // Sync version (fixed chain cap, no network fetch) — for burner txs where we set an explicit gasLimit
 // and just need a chain-realistic price. Replaces the old Base-only baseGasOverrides().
 function chainGasOverridesSync(chain) {
@@ -831,6 +841,30 @@ async function waitTokenBalance(provider, tokenAddr, addr, min, retries = 60) {
   throw new Error(`token balance never reached on ${addr}`)
 }
 // Poll until ETH balance >= minimum. Mirrors frontend e9().
+// After a swap's reshield: send the burner's unused gas back to the relayer that advanced it, so the burner ends
+// empty. Keeps only the cost of this transfer (+30%, plus an L1 data-fee cushion on Base). Never fails the swap.
+async function returnUnusedGas(burner, provider, chain) {
+  try {
+    const cfg = await apiGet('/api/zk/config')
+    const to = cfg && cfg.relayer
+    if (!to || !/^0x[a-fA-F0-9]{40}$/.test(to)) return
+    const fees = await burnerFees(provider, chain)
+    const fee = fees.maxFeePerGas || fees.gasPrice
+    const bal = await provider.getBalance(burner.address)
+    let gas = ethers.BigNumber.from(21_000)
+    try { gas = await provider.estimateGas({ from: burner.address, to, value: 1 }) } catch {}
+    const gasLimit = gas.mul(13).div(10)
+    const l1Cushion = chain === 'base' ? ethers.utils.parseUnits('2000', 'gwei') : ethers.BigNumber.from(0) // OP-stack L1 data fee
+    const keep = gasLimit.mul(fee).add(l1Cushion)
+    if (bal.lte(keep.mul(2))) return // nothing worth moving
+    const value = bal.sub(keep)
+    await broadcastAndWait(burner, provider, { to, value, gasLimit, ...fees }, { label: 'return unused gas' })
+    info(`returned ${ethers.utils.formatEther(value)} unused gas to the relayer (burner is empty)`)
+  } catch (e) {
+    info(`could not return the unused gas (${cleanErr(e)}); \`blackpool recover\` can sweep it later`)
+  }
+}
+
 async function waitEthBalance(provider, addr, min, label = 'eth') {
   for (let i = 0; i < 80; i++) {
     const b = await provider.getBalance(addr)
@@ -1096,7 +1130,8 @@ async function cmdSwap(args) {
   // per-chain Uniswap V3 + token addresses (registry)
   const U = { router: C.uni.router, quoter: C.uni.quoter, weth: C.uni.weth, stable: C.uni.stable, fee: C.uni.fee }
   const stableDecimals = C.pools[stablePool].decimals
-  const gasOv = (limit) => ({ gasLimit: limit, ...(chainGasOverridesSync(chain)) })
+  let liveFees = null // set before the first burner tx (see reserve sizing below)
+  const gasOv = (limit) => ({ gasLimit: limit, ...(liveFees || chainGasOverridesSync(chain)) })
 
   const wallet = getWallet()
   const sig = await ensureSignature(wallet)
@@ -1128,8 +1163,12 @@ async function cmdSwap(args) {
   // stablecoin dest, or a single ~1.6M-gas deposit for an ETH dest — priced at the chain's gas cap
   // (never ethers' 1.5 gwei default). Under-reserving here is exactly what stranded ETH→USDG on
   // Robinhood, so reserve generously (+50%).
-  const gasCap = ethers.utils.parseUnits(C.gasCapGwei, 'gwei')
-  const reshieldGasReserve = ethers.BigNumber.from(1_680_000).mul(gasCap).mul(15).div(10)
+  // Priced at the LIVE fee (3 x baseFee + tip, never above the chain cap) rather than the cap itself: on Arbitrum the
+  // cap is ~50x the real price, which left most of a small swap sitting on the burner as unused gas.
+  liveFees = await burnerFees(provider, chain)
+  const feePerGas = liveFees.maxFeePerGas || liveFees.gasPrice
+  const reshieldGasNeed = ethers.BigNumber.from(1_680_000).mul(feePerGas) // approve + ZK deposit, advanced by the relayer
+  const swapGasReserve = ethers.BigNumber.from(320_000).mul(feePerGas).mul(15).div(10) // the swap tx itself
 
   // === Step 3: wait funds on burner + top-up gas for stablecoin origin ===
   let amountIn
@@ -1137,9 +1176,9 @@ async function cmdSwap(args) {
     info('waiting for ETH on burner...')
     await waitEthBalance(provider, burner.address, ethers.utils.parseEther('0.0001'), 'burner funding')
     const bal = await provider.getBalance(burner.address)
-    // Leave enough ETH for the stablecoin reshield's approve+deposit (dest is a stablecoin here).
-    if (bal.lte(reshieldGasReserve)) fail('burner balance too low after fees')
-    amountIn = bal.sub(reshieldGasReserve)
+    // Swap everything except the swap tx's own gas; the relayer advances the reshield gas afterwards.
+    if (bal.lte(swapGasReserve)) fail('burner balance too low after fees')
+    amountIn = bal.sub(swapGasReserve)
   } else {
     info(`waiting for ${stableSym} on burner...`)
     amountIn = await waitTokenBalance(provider, U.stable, burner.address, ethers.BigNumber.from(1), 200)
@@ -1214,17 +1253,19 @@ async function cmdSwap(args) {
   if (isEthOrigin) {
     // Stablecoin destination: reshield the full stable balance (gas paid in the burner's reserved ETH).
     reshieldAmount = await waitTokenBalance(provider, U.stable, burner.address, ethers.BigNumber.from(1), 60)
-    // Make sure the reserved ETH survived the swap (it should — swap input excluded it).
-    if ((await provider.getBalance(burner.address)).lt(reshieldGasReserve.div(2))) {
-      info('topping up burner gas before reshield...')
+    // The relayer advances the approve + deposit gas (the burner now holds the stablecoin, which is what the
+    // top-up endpoint checks). Whatever is not used goes back to the relayer after the reshield.
+    if ((await provider.getBalance(burner.address)).lt(reshieldGasNeed)) {
+      info('relayer advancing reshield gas...')
       const g = await apiPost('/api/burner-gas', { signature: sig, burnerAddress: burner.address, chain, txCount: 2 }, { timeoutMs: 60_000 })
-      if (g.success) await waitEthBalance(provider, burner.address, ethers.BigNumber.from(1), 'reshield gas')
+      if (!g.success) fail('reshield gas top-up failed; the swapped funds are safe on the burner, run `blackpool recover`')
+      await waitEthBalance(provider, burner.address, reshieldGasNeed, 'reshield gas')
     }
   } else {
     // ETH destination: the deposit tx is payable (value = amount) AND pays its own gas from the same
-    // balance. Reserve the deposit gas at the chain cap.
+    // balance. Reserve the deposit gas at the live fee.
     const full = await waitEthBalance(provider, burner.address, ethers.utils.parseEther('0.0000001'), 'swap output')
-    const gasReserve = gasCap.mul(1_600_000)
+    const gasReserve = feePerGas.mul(1_600_000).mul(12).div(10) // live fee, +20%
     if (full.lte(gasReserve)) fail(`swap output ${ethers.utils.formatEther(full)} ETH too small to reshield after gas`)
     reshieldAmount = full.sub(gasReserve)
   }
@@ -1273,8 +1314,8 @@ async function cmdSwap(args) {
   try { estGas = await provider.estimateGas({ to: prep.to, data: prep.data, value: reshieldVal, from: burner.address }) }
   catch { estGas = ethers.BigNumber.from(1_600_000) } // fallback
   const gasLimit = estGas.mul(12).div(10) // +20% headroom
-  // Cap at the chain's gas ceiling OR at what fits in burner ETH, whichever is lower.
-  let maxFee = gasCap
+  // The live fee OR what fits in burner ETH, whichever is lower.
+  let maxFee = feePerGas
   const maxAffordable = burnerEth.div(gasLimit)
   if (maxFee.gt(maxAffordable)) maxFee = maxAffordable.mul(9).div(10) // 90% of ceiling
   const rtx = await broadcastAndWait(burner, provider, {
@@ -1283,6 +1324,8 @@ async function cmdSwap(args) {
     maxFeePerGas: maxFee,
     maxPriorityFeePerGas: maxFee.div(10),
   }, { label: 'reshield' })
+
+  await returnUnusedGas(burner, provider, chain)
 
   log('')
   ok(color(`swap complete: ${amount} ${from.toUpperCase()} -> ${reshieldFmt} ${toSym} (private) on ${C.label}`, c.green))

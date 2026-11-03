@@ -281,6 +281,38 @@ const WalletIcon = () => (
 // so a swap's own reshield and the auto-recovery never broadcast for the same burner at once.
 const busyBurners = new Set<string>()
 
+// After a reshield: send the burner's unused gas back to the relayer that advanced it, so no funds stay on the burner.
+// Keeps only this transfer's cost (+30%, plus an L1 data-fee cushion on Base). Never throws.
+async function returnUnusedGas(bw: ethers.Wallet, provider: ethers.Provider, chain: string): Promise<void> {
+  try {
+    const cfg = await fetch(`${process.env.NEXT_PUBLIC_API_URL || ''}/api/zk/config`).then((r) => r.json())
+    const to: string | undefined = cfg?.relayer
+    if (!to || !/^0x[a-fA-F0-9]{40}$/.test(to)) return
+    const blk = await provider.getBlock('latest')
+    const legacy = !blk?.baseFeePerGas || blk.baseFeePerGas === BigInt(0)
+    const tip = ethers.parseUnits('0.001', 'gwei')
+    let fee: bigint
+    let ov: { maxFeePerGas: bigint, maxPriorityFeePerGas: bigint } | { gasPrice: bigint }
+    if (legacy) {
+      const fd = await provider.getFeeData()
+      const floor = ethers.parseUnits('0.06', 'gwei')
+      fee = fd.gasPrice && fd.gasPrice > floor ? fd.gasPrice : floor
+      ov = { gasPrice: fee }
+    } else {
+      fee = blk!.baseFeePerGas! * BigInt(2) + tip
+      ov = { maxFeePerGas: fee, maxPriorityFeePerGas: tip }
+    }
+    const bal = await provider.getBalance(bw.address)
+    let gas = BigInt(21000)
+    try { gas = await provider.estimateGas({ from: bw.address, to, value: BigInt(1) }) } catch { /* plain transfer */ }
+    const gasLimit = gas * BigInt(13) / BigInt(10)
+    const keep = gasLimit * fee + (chain === 'base' ? ethers.parseUnits('2000', 'gwei') : BigInt(0))
+    if (bal <= keep * BigInt(2)) return
+    const tx = await bw.sendTransaction({ to, value: bal - keep, gasLimit, ...ov })
+    await tx.wait()
+  } catch { /* leftover stays registered; recovery can sweep it */ }
+}
+
 export default function Home() {
   const [tab, setTab] = useState<Tab>('send');
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
@@ -1168,6 +1200,7 @@ export default function Home() {
       if (prep.approveTx) await sendResilient({ to: prep.approveTx.to, data: prep.approveTx.data, value: BigInt(0), gasLimit: BigInt(80000) })
       await sendResilient({ to: prep.to, data: prep.data, value: BigInt(prep.value || '0'), gasLimit: RESHIELD_GAS })
       setStepper({ steps, active: steps.length, error: null })
+      await returnUnusedGas(bw, provider, recoverChain)
       setStatus(`Recovered! +${destAmount} ${destSym} in your private balance`)
       setStuckBurner(null)
       setPrivateBalanceChanged(prev => prev + 1)
@@ -1414,6 +1447,7 @@ export default function Home() {
       await sendBurnerResilient(bw, provider, bState.address, { to: prep.to, data: prep.data, value: BigInt(prep.value || '0'), gasLimit: BigInt(1600000), ...swGasOv })
 
       setStep(swapSteps.length)
+      await returnUnusedGas(bw, provider, activeChain)
       setStatus(`Swapped to private! +${destAmount} ${destSym} in your private balance`)
       setStuckBurner(null)
       setSwapAmount('')
