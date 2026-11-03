@@ -1,0 +1,70 @@
+/* Blackpool docs — same tokens as the landing, scoped under .dc */
+.dc { --bg: #0B0C0E; --s1: #0E0F11; --s2: #121316; --s3: #17181A; --b1: #1B1B1D; --b2: #232427;
+  --fg: #EBECEC; --fg2: #C9CACC; --mut: #A4A5A5; --dim: #6E7074; --green: #34C77B; --blue: #5B8DEF;
+  background: var(--bg); color: var(--fg); font-family: 'Inter', -apple-system, system-ui, sans-serif; min-height: 100vh; -webkit-font-smoothing: antialiased; }
+.dc a { color: inherit; text-decoration: none; }
+.dc code { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: .92em; background: var(--s3); border: 1px solid var(--b2); border-radius: 5px; padding: 1px 6px; color: var(--fg2); }
+
+/* nav */
+.dc-nav { position: sticky; top: 0; z-index: 40; background: rgba(11,12,14,.78); backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px); border-bottom: 1px solid var(--b1); }
+.dc-nav-in { max-width: 1240px; margin: 0 auto; padding: 0 24px; height: 60px; display: flex; align-items: center; gap: 28px; }
+.dc-brand { display: flex; align-items: center; gap: 10px; font-weight: 600; font-size: 17px; letter-spacing: -.3px; color: var(--fg); }
+.dc-brand-docs { color: var(--dim); font-weight: 500; margin-left: 2px; }
+.dc-nav-links { display: flex; gap: 22px; font-size: 14px; color: var(--mut); margin-left: auto; }
+.dc-nav-links a:hover { color: var(--fg); }
+.dc a.dc-btn { background: var(--fg); color: var(--bg); font-weight: 500; font-size: 13.5px; border-radius: 10px; padding: 9px 14px; }
+
+/* layout */
+.dc-body { max-width: 1240px; margin: 0 auto; padding: 40px 24px 80px; display: grid; grid-template-columns: 240px minmax(0, 1fr); min-width: 0; gap: 56px; align-items: start; }
+.dc-side { position: sticky; top: 84px; display: flex; flex-direction: column; gap: 6px; }
+.dc-side-h { font-size: 12px; color: var(--dim); margin-bottom: 8px; }
+.dc-side nav { display: flex; flex-direction: column; }
+.dc-side nav a { font-size: 13.5px; color: var(--mut); padding: 7px 10px; border-radius: 8px; border-left: 1px solid var(--b1); border-radius: 0; margin-left: 0; }
+.dc-side nav a:hover { color: var(--fg); border-left-color: var(--fg2); background: linear-gradient(90deg, var(--s2), transparent); }
+.dc-side-foot { margin-top: 22px; font-size: 11.5px; color: var(--dim); line-height: 1.5; max-width: 200px; }
+
+/* content */
+.dc-main { max-width: 760px; min-width: 0; } .dc-side { min-width: 0; }
+.dc-eyebrow { font-size: 13px; color: var(--mut); margin: 0 0 10px; }
+.dc-main h1 { font-size: 44px; line-height: 1.05; letter-spacing: -.03em; font-weight: 300; margin: 0 0 18px; }
+.dc-lead { font-size: 17px; line-height: 1.6; color: var(--mut); margin: 0 0 8px; }
+.dc-main section { padding-top: 56px; margin-top: 8px; border-top: 1px solid var(--b1); scroll-margin-top: 84px; }
+.dc-main section:first-of-type { border-top: 0; padding-top: 40px; }
+.dc-main h2 { font-size: 26px; font-weight: 500; letter-spacing: -.02em; margin: 0 0 14px; }
+.dc-main h3 { font-size: 15px; font-weight: 600; margin: 26px 0 8px; color: var(--fg); }
+.dc-main p { font-size: 15px; line-height: 1.7; color: var(--fg2); margin: 0 0 14px; }
+.dc-main p em { color: var(--fg); font-style: normal; font-weight: 500; }
+.dc-main p strong { color: var(--fg); font-weight: 600; }
+.dc-note { font-size: 13.5px !important; color: var(--mut) !important; background: var(--s1); border: 1px solid var(--b1); border-left: 2px solid var(--blue); border-radius: 10px; padding: 12px 14px; }
+.dc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 18px 0 6px; }
+.dc-grid div { background: var(--s1); border: 1px solid var(--b1); border-radius: 12px; padding: 16px; display: flex; flex-direction: column; gap: 6px; }
+.dc-grid b { font-size: 14px; font-weight: 600; } .dc-grid span { font-size: 13px; color: var(--mut); line-height: 1.5; }
+.dc-steps { margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.6; color: var(--fg2); }
+.dc-steps b { color: var(--fg); font-weight: 600; }
+.dc-list { margin: 0 0 14px; padding-left: 20px; display: flex; flex-direction: column; gap: 8px; font-size: 15px; line-height: 1.6; color: var(--fg2); }
+.dc-code { background: var(--s1); border: 1px solid var(--b1); border-radius: 12px; padding: 16px 18px; overflow-x: auto; margin: 6px 0 16px; }
+.dc-code code { background: none; border: 0; padding: 0; font-size: 13px; line-height: 1.65; color: var(--fg2); white-space: pre; }
+.dc-table { width: 100%; border-collapse: collapse; font-size: 14px; margin: 6px 0 14px; border: 1px solid var(--b1); border-radius: 12px; overflow: hidden; }
+.dc-table th { text-align: left; font-weight: 500; color: var(--dim); font-size: 12.5px; padding: 10px 14px; background: var(--s1); border-bottom: 1px solid var(--b1); }
+.dc-table td { padding: 11px 14px; border-bottom: 1px solid var(--b1); color: var(--fg2); vertical-align: top; }
+.dc-table tr:last-child td { border-bottom: 0; }
+.dc-table tr[id] { scroll-margin-top: 90px; } .dc-table tr:target td { background: rgba(91,141,239,.10); color: var(--fg); }
+.dc-main h3[id] { scroll-margin-top: 90px; }
+.dc-main details { border: 1px solid var(--b1); border-radius: 12px; background: var(--s1); padding: 0 16px; margin-bottom: 10px; }
+.dc-main summary { cursor: pointer; font-size: 15px; font-weight: 500; padding: 14px 0; list-style: none; display: flex; justify-content: space-between; align-items: center; }
+.dc-main summary::after { content: "+"; color: var(--dim); font-weight: 400; }
+.dc-main details[open] summary::after { content: "–"; }
+.dc-main details p { padding-bottom: 14px; margin: 0; }
+.dc-foot { display: flex; justify-content: space-between; margin-top: 64px; padding-top: 22px; border-top: 1px solid var(--b1); font-size: 13px; color: var(--dim); }
+.dc-foot nav { display: flex; gap: 18px; } .dc-foot nav a:hover { color: var(--fg); }
+
+@media (max-width: 900px) {
+  .dc-body { grid-template-columns: minmax(0, 1fr); gap: 24px; padding-top: 24px; }
+  .dc-side { position: static; }
+  .dc-side nav { flex-direction: row; overflow-x: auto; gap: 6px; padding-bottom: 6px; scrollbar-width: none; }
+  .dc-side nav a { white-space: nowrap; border: 1px solid var(--b2); border-radius: 999px; padding: 6px 11px; background: var(--s1); }
+  .dc-side-foot, .dc-nav-links { display: none; }
+  .dc-main h1 { font-size: 34px; }
+  .dc-grid { grid-template-columns: 1fr; }
+  .dc-table { font-size: 13px; display: block; overflow-x: auto; }
+}

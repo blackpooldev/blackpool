@@ -1,0 +1,22 @@
+/* /recover — landing language (shares .cl tokens with /changelog). Figma: "Recover — default". */
+.rc-lead { max-width: 620px; line-height: 1.55 !important; }
+.rc-tool { padding: 48px 48px 24px; }
+.rc-vis { padding: 48px 24px; }
+.rc-win { gap: 10px; }
+.rc-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; flex: none; }
+.rc .cl-kv b.mono { font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; }
+.rc button.rc-btn { background: var(--fg); color: var(--bg); border-radius: 10px; width: 100%; height: 40px; justify-content: center; border: 0; font: inherit; font-size: 13.5px; font-weight: 500; cursor: pointer; display: inline-flex; align-items: center; gap: 9px; transition: transform .12s ease, opacity .2s ease; }
+.rc button.rc-btn:hover:not(:disabled) { background: #fff; transform: translateY(-1px); }
+.rc button.rc-btn:active:not(:disabled) { transform: scale(.992); }
+.rc button.rc-btn:disabled { opacity: .6; cursor: default; }
+.rc-spin { width: 13px; height: 13px; border-radius: 50%; border: 2px solid rgba(11,12,14,.25); border-top-color: var(--bg); animation: rc-rot .8s linear infinite; }
+@keyframes rc-rot { to { transform: rotate(360deg); } }
+.rc-console { background: var(--bg); border: 1px solid var(--b2); border-radius: 9px; padding: 10px 12px 12px; display: grid; gap: 6px; }
+.rc-console-h { display: flex; align-items: center; justify-content: space-between; font-size: 11px; color: var(--dim); }
+.rc-log { margin: 0; font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace; font-size: 12px; line-height: 1.65; color: var(--fg2); white-space: pre-wrap; word-break: break-all; overflow: auto; max-height: 420px; min-height: 44px; }
+.rc-prompt { color: var(--green); }
+.rc-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; padding: 24px 48px 40px; }
+.rc-tile { background: var(--s1); border: 1px solid var(--b1); border-radius: 14px; padding: 20px; display: grid; gap: 8px; align-content: start; }
+.rc-tile h3 { margin: 0; font-size: 15px; font-weight: 500; color: var(--fg); }
+.rc-tile p { margin: 0; font-size: 13.5px; line-height: 1.55; color: var(--mut); }
+@media (max-width: 900px) { .rc-tool { padding: 32px 0 16px; } .rc-tiles { grid-template-columns: 1fr; padding: 16px 0 32px; } .rc .cl-head { padding-left: 0; padding-right: 0; } .rc-vis { padding: 24px 12px; } .rc .cl-mock.wide { max-width: none; } }

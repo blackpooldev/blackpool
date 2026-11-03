@@ -1,0 +1,21 @@
+# Blackpool
+
+> Private payments that leave no trail: zero-knowledge privacy pools on Robinhood Chain, Base, Arbitrum and BNB Chain. Shield funds once, then send, swap or bridge them with no on-chain link back to your wallet. Agents use the `@blackpool/cli` command-line tool with JSON output.
+
+## For agents
+- [AGENTS.md](https://blackpool.cash/AGENTS.md): complete guide for AI agents and scripts — setup, every CLI command, JSON output fields, chains, fees and minimums, bridging, recipes, integration code (Node, Python, tool definition), errors, retry rules, security.
+- [npm package](https://www.npmjs.com/package/@blackpool/cli): `npm i -g @blackpool/cli`
+
+## Docs
+- [Docs](https://blackpool.cash/docs): how the pools work, shield, private send, swap, private bridge, recovery
+- [Chains and contract addresses](https://blackpool.cash/docs#chains)
+- [Fees and limits](https://blackpool.cash/docs#fees)
+- [API](https://blackpool.cash/docs#api): `https://api.blackpool.cash`
+- [Security model](https://blackpool.cash/docs#security)
+- [Status](https://blackpool.cash/status)
+- [Privacy](https://blackpool.cash/privacy), [Terms](https://blackpool.cash/terms)
+
+## Optional
+- [Changelog](https://blackpool.cash/changelog)
+- [Analytics](https://blackpool.cash/analytics)
+- [Source code](https://github.com/blackpooldev/blackpool)

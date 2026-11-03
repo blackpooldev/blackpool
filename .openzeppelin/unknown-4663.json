@@ -1,0 +1,317 @@
+{
+  "manifestVersion": "3.2",
+  "proxies": [
+    {
+      "address": "0x993490DCc199A41D5A2A412e30bA205FD43B9D69",
+      "txHash": "0xca074b2082f4138679f0476094ee43f8bc7fe489130fb404e35464fd267c214c",
+      "kind": "uups"
+    },
+    {
+      "address": "0xeBfC2287Efc2FEDc51e24124A582bcb6CcDD5300",
+      "txHash": "0x730d0104424c8686349c9d21d010f0675cb7ac8a5873176a1e727cb541c66747",
+      "kind": "uups"
+    }
+  ],
+  "impls": {
+    "d54cb11a1a7f8091e3498ee65dfe3caaa59c3a1909b2f8a35aa101eaa74558d8": {
+      "address": "0x2A3a1219ef552b4fE2C8bFD450612004286478b6",
+      "txHash": "0x464f85ac93518c7a8253e61ca432168867f5655e3296ab70d0019328f16f0d1d",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "filledSubtrees",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_uint256,t_bytes32)",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:29"
+          },
+          {
+            "label": "roots",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_uint256,t_bytes32)",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:30"
+          },
+          {
+            "label": "currentRootIndex",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint32",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:32"
+          },
+          {
+            "label": "nextIndex",
+            "offset": 4,
+            "slot": "2",
+            "type": "t_uint32",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:33"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_array(t_uint256)47_storage",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:157"
+          },
+          {
+            "label": "admin",
+            "offset": 0,
+            "slot": "50",
+            "type": "t_address",
+            "contract": "BlackpoolEtherPoolL2",
+            "src": "contracts/robinhood/BlackpoolEtherPoolL2.sol:23"
+          },
+          {
+            "label": "pendingAdmin",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "BlackpoolEtherPoolL2",
+            "src": "contracts/robinhood/BlackpoolEtherPoolL2.sol:24"
+          },
+          {
+            "label": "maximumDepositAmount",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_uint256",
+            "contract": "BlackpoolEtherPoolL2",
+            "src": "contracts/robinhood/BlackpoolEtherPoolL2.sol:26"
+          },
+          {
+            "label": "minimumAmount",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_uint256",
+            "contract": "BlackpoolEtherPoolL2",
+            "src": "contracts/robinhood/BlackpoolEtherPoolL2.sol:27"
+          },
+          {
+            "label": "nullifierHashes",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "BlackpoolEtherPoolL2",
+            "src": "contracts/robinhood/BlackpoolEtherPoolL2.sol:28"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]",
+            "numberOfBytes": "1504"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bytes32)": {
+            "label": "mapping(uint256 => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73"
+            }
+          ]
+        }
+      }
+    },
+    "1289e99477c0abc13514a085af4d3500a9da500a7d2bca6c07bfb0267d134cc6": {
+      "address": "0x71716bCc48Ec226De36fa07d11959b1C27e9EC19",
+      "txHash": "0xd3115b72ccecbe912e8956c269699f84661e6b1515b16b700f43ba72020d490e",
+      "layout": {
+        "solcVersion": "0.8.24",
+        "storage": [
+          {
+            "label": "filledSubtrees",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_mapping(t_uint256,t_bytes32)",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:29"
+          },
+          {
+            "label": "roots",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_mapping(t_uint256,t_bytes32)",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:30"
+          },
+          {
+            "label": "currentRootIndex",
+            "offset": 0,
+            "slot": "2",
+            "type": "t_uint32",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:32"
+          },
+          {
+            "label": "nextIndex",
+            "offset": 4,
+            "slot": "2",
+            "type": "t_uint32",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:33"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "3",
+            "type": "t_array(t_uint256)47_storage",
+            "contract": "MerkleTreeWithHistoryL2",
+            "src": "contracts/robinhood/MerkleTreeWithHistoryL2.sol:157"
+          },
+          {
+            "label": "admin",
+            "offset": 0,
+            "slot": "50",
+            "type": "t_address",
+            "contract": "BlackpoolERCPoolL2",
+            "src": "contracts/robinhood/BlackpoolERCPoolL2.sol:25"
+          },
+          {
+            "label": "pendingAdmin",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_address",
+            "contract": "BlackpoolERCPoolL2",
+            "src": "contracts/robinhood/BlackpoolERCPoolL2.sol:26"
+          },
+          {
+            "label": "maximumDepositAmount",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_uint256",
+            "contract": "BlackpoolERCPoolL2",
+            "src": "contracts/robinhood/BlackpoolERCPoolL2.sol:28"
+          },
+          {
+            "label": "minimumAmount",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_uint256",
+            "contract": "BlackpoolERCPoolL2",
+            "src": "contracts/robinhood/BlackpoolERCPoolL2.sol:29"
+          },
+          {
+            "label": "nullifierHashes",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_mapping(t_bytes32,t_bool)",
+            "contract": "BlackpoolERCPoolL2",
+            "src": "contracts/robinhood/BlackpoolERCPoolL2.sol:30"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_uint256)47_storage": {
+            "label": "uint256[47]",
+            "numberOfBytes": "1504"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_bytes32": {
+            "label": "bytes32",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_bytes32,t_bool)": {
+            "label": "mapping(bytes32 => bool)",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_uint256,t_bytes32)": {
+            "label": "mapping(uint256 => bytes32)",
+            "numberOfBytes": "32"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint32": {
+            "label": "uint32",
+            "numberOfBytes": "4"
+          },
+          "t_uint64": {
+            "label": "uint64"
+          }
+        },
+        "namespaces": {
+          "erc7201:openzeppelin.storage.Pausable": [
+            {
+              "contract": "PausableUpgradeable",
+              "label": "_paused",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts-upgradeable/utils/PausableUpgradeable.sol:21"
+            }
+          ],
+          "erc7201:openzeppelin.storage.Initializable": [
+            {
+              "contract": "Initializable",
+              "label": "_initialized",
+              "type": "t_uint64",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:69"
+            },
+            {
+              "contract": "Initializable",
+              "label": "_initializing",
+              "type": "t_bool",
+              "src": "@openzeppelin/contracts/proxy/utils/Initializable.sol:73"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
