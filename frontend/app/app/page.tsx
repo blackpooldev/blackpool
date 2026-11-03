@@ -19,6 +19,7 @@ import { ChainSwitcher } from "../components/ChainSwitcher";
 import { DepositModal } from "../components/DepositModal";
 import { LightRays } from "../components/LightRays";
 import { StepperModal, type Step } from "../components/Stepper";
+import { BridgeWatch } from "../components/BridgeWatch";
 import { TxResult, explorerHomeUrl, explorerName } from "../components/TxResult";
 import { SlippageControl } from "../components/Slippage";
 import { createAndRegisterBurner, listRecoverableBurners, markBurnerSwept, burnerWallet, registryAuthSigFromSignIn, type BurnerState } from "../lib/burner";
@@ -60,6 +61,8 @@ const ASSET_LABELS: Record<string, { symbol: string, chain: string, logo: string
 }
 // Recipient format per destination chain (EVM default). 1Click has no XRP destination tag: self-custody r-address only.
 const RECIPIENT_RE: Record<string, RegExp> = { Solana: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, XRP: /^r[1-9A-HJ-NP-Za-km-z]{24,34}$/ }
+// "0.25 USDC (Base)"-style label for a 1Click asset key; unknown keys fall back to the raw key.
+const assetLabel = (k: string) => (ASSET_LABELS[k] ? `${ASSET_LABELS[k].symbol} (${ASSET_LABELS[k].chain})` : k)
 const recipientValid = (toAsset: string, addr: string) => (RECIPIENT_RE[ASSET_LABELS[toAsset]?.chain || ''] || /^0x[a-fA-F0-9]{40}$/).test(addr)
 const NON_EVM_DESTS = ['sol_sol', 'sol_usdc', 'sol_usdt']
 // swap = same-chain destination (the origin token is excluded in the UI)
@@ -1499,6 +1502,8 @@ export default function Home() {
           </div>
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20, paddingTop: 5 }}>
+            {/* ===== BRIDGES IN FLIGHT (they finish even if the tab was closed) ===== */}
+            <BridgeWatch enabled={isConnected && !!storedSig} getAuthSig={getRegistryAuthSig} labelOf={assetLabel} refreshKey={privateBalanceChanged} hidden={!!stepper} />
             {/* ===== STUCK-FUNDS RECOVERY BANNER ===== */}
             {burnerSigMismatch && !stuckBurner && !stepper && (
               <div style={{ background: 'rgba(255,180,80,0.08)', border: '1px solid rgba(255,180,80,0.4)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>

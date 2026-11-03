@@ -984,3 +984,8 @@ pre.hl-inline code { color: #C9CACC; }
 @media (max-width: 374px) {
   .chain_btn .chain_name { display: none; }
 }
+
+/* bridge watch: pulsing dot for bridges in flight */
+.bridge-watch .bw-dot { animation: bwpulse 1.4s ease-in-out infinite; }
+@keyframes bwpulse { 0%, 100% { opacity: 1; } 50% { opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .bridge-watch .bw-dot { animation: none; } }
