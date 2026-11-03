@@ -48,9 +48,19 @@ function createLocalApi({ request, loadCircuit, snarkjs, singleThread = false, o
   const units = (P, v) => BigInt(U.parseUnits(String(v), P.decimals).toString())
   const fmt = (P, v) => U.formatUnits(v.toString(), P.decimals)
 
+  // A snapshot behind the chain (the API reports the pool's on-chain nextIndex) would show old notes right after a
+  // transaction; wait for it to catch up (normally a few seconds) before using it.
+  async function poolSnapshot(P, timeoutMs = 45_000) {
+    const until = Date.now() + timeoutMs
+    for (;;) {
+      const d = await request('GET', `/api/zk/pool?chain=${P.chain}&pool=${P.pool}`)
+      if (d.chainNextIndex == null || d.nextIndex >= d.chainNextIndex || Date.now() > until) return d
+      await new Promise((r) => setTimeout(r, 2500))
+    }
+  }
   async function account(keys, P) {
     onProgress({ stage: 'scan', pool: P.key })
-    const data = await request('GET', `/api/zk/pool?chain=${P.chain}&pool=${P.pool}`)
+    const data = await poolSnapshot(P)
     const indexed = new Set(data.nullifiers.map((n) => n.toLowerCase()))
     const pend = mem.pending.get(P.key) || new Set()
     for (const n of pend) if (indexed.has(n)) pend.delete(n)

@@ -486,10 +486,13 @@ async function chainGasOverrides(provider, chain) {
     return { gasPrice: gp }
   }
   const cap = ethers.utils.parseUnits(CHAINS[chain].gasCapGwei, 'gwei')
-  let netMax
-  try { const fd = await provider.getFeeData(); netMax = fd.maxFeePerGas } catch {}
-  const maxFeePerGas = netMax && netMax.lt(cap) ? netMax : cap
   const minPrio = ethers.utils.parseUnits('0.001', 'gwei')
+  // 2 x baseFee + tip, like wallets do. Not getFeeData(): ethers v5 adds a 1.5 gwei tip, which then hits the cap
+  // (0.5 gwei on Arbitrum, ~50x the real price) and makes the node reject value + gas x maxFee as unaffordable.
+  let netMax
+  try { const b = await provider.getBlock('latest'); if (b && b.baseFeePerGas) netMax = b.baseFeePerGas.mul(2).add(minPrio) } catch {}
+  if (!netMax) { try { const fd = await provider.getFeeData(); netMax = fd.maxFeePerGas } catch {} }
+  const maxFeePerGas = netMax && netMax.lt(cap) ? netMax : cap
   const maxPriorityFeePerGas = maxFeePerGas.lt(minPrio) ? maxFeePerGas : minPrio
   return { maxFeePerGas, maxPriorityFeePerGas }
 }
@@ -1485,7 +1488,10 @@ async function main() {
       case undefined: help();                    break
       default: if (!JSON_MODE) { log(`unknown command: ${cmd}\n`); help() } fail(`unknown command: ${cmd} (run blackpool help)`, 2)
     }
-    if (JSON_MODE) process.stdout.write(JSON.stringify({ ok: true, command: CMD, ...RESULT }) + '\n')
+    // Exit explicitly: the prover leaves worker threads alive, which would keep the process running after a
+    // deposit, send, swap or bridge has already finished.
+    if (JSON_MODE) process.stdout.write(JSON.stringify({ ok: true, command: CMD, ...RESULT }) + '\n', () => process.exit(0))
+    else process.stdout.write('', () => process.exit(0)) // flush piped output first
   } catch (e) {
     fail(cleanErr(e))
   }
