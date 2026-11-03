@@ -419,6 +419,8 @@ Use the hosted server to plan (fees, routes, quotes, status) and the local serve
 | `insufficient` / `no unspent` | Private balance too low | `balance`, then `deposit` more. |
 | `Withdrawal must be more than twice the fee` | Amount too close to the fee | Larger amount. |
 | `Amount is too low for this route. Minimum is …` | Solver minimum for that bridge | Bridge at least that much. |
+| `This route needs at least $… right now` | Temporary USD floor the solver network sets on a route (code `ROUTE_MINIMUM`; currently every route to or from BNB Chain) | Bridge at least that much or pick another destination. Nothing left the private balance. |
+| `No route for this pair right now` | No solver quotes the pair (code `NO_ROUTE`) | Pick another token or chain. |
 | `rate limited, slow down` | API limit (40 relay ops, 600 reads per minute per IP) | The CLI already waited and retried 4 times; pause a minute. |
 | `simulation failed: …` | The relayer refused a transaction that would revert | Do not retry blindly; check `balance`; report the message. |
 | `reshield would revert` / `swap output … too small` | Swap stopped after funds reached the burner | `recover`, then `deposit` again. |

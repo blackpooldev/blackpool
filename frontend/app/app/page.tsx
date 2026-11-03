@@ -338,6 +338,7 @@ export default function Home() {
   const [bridgeRecipient, setBridgeRecipient] = useState('')
   const [bridgeToAsset, setBridgeToAsset] = useState('eth_usdc') // destination chain+token
   const [bridgeQuote, setBridgeQuote] = useState<{ amountOut: string, timeEstimate: number, symbol: string } | null>(null)
+  const [bridgeLimit, setBridgeLimit] = useState<string | null>(null) // route minimum from the solver network, shown under the route row
   const [bridgeUnavailable, setBridgeUnavailable] = useState(false) // solver has no route/quote for this pair right now
   const [bridgeChecking, setBridgeChecking] = useState(false)
 
@@ -799,6 +800,7 @@ export default function Home() {
   useEffect(() => {
     setBridgeQuote(null)
     setBridgeUnavailable(false)
+    setBridgeLimit(null)
     const amt = Number(bridgeAmount)
     if (!bridgeAmount || isNaN(amt) || amt <= 0) { setBridgeChecking(false); return }
     setBridgeChecking(true)
@@ -809,8 +811,10 @@ export default function Home() {
         setBridgeUnavailable(false)
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e)
-        // routers/1Click signal "no route" when there's no liquidity for the pair
-        setBridgeUnavailable(/not available|no route|no quote|unavailable/i.test(msg))
+        // route floors from the solver network ("needs at least $1,000", "too low ... Minimum is X"): show it, block the button
+        if (/needs at least|too low for this route/i.test(msg)) setBridgeLimit(msg)
+        // the solver network signals "no route" / "no liquidity" when nobody quotes the pair
+        else setBridgeUnavailable(/not available|no route|no quote|no liquidity|unavailable/i.test(msg))
         console.error('bridge quote:', msg)
       } finally { setBridgeChecking(false) }
     }, 600)
@@ -1678,6 +1682,11 @@ export default function Home() {
                     No route for this pair right now. Try a different token/chain, or check back shortly.
                   </div>
                 )}
+                {bridgeLimit && !bridgeUnavailable && (
+                  <div role="status" style={{ fontSize: '0.76em', color: '#ffb450', padding: '2px 2px 0', lineHeight: 1.4 }}>
+                    {bridgeLimit}
+                  </div>
+                )}
                 <div style={{ marginBottom: 0 }}>
                   <input className="input" placeholder={`Recipient ${ASSET_LABELS[bridgeToAsset]?.chain} address`} value={bridgeRecipient} onChange={(e) => setBridgeRecipient(e.target.value)} />
                 </div>
@@ -1686,9 +1695,9 @@ export default function Home() {
                     If the solver cannot complete the swap, the refund goes to your connected wallet on {CHAIN_POOLS[activeChain].label}.
                   </div>
                 )}
-                {bridgeUnavailable ? (
+                {bridgeUnavailable || bridgeLimit ? (
                   <button className="btn btn-primary" disabled style={{ width: '100%', opacity: 0.5, cursor: 'not-allowed' }}>
-                    <span>Route unavailable</span>
+                    <span>{bridgeUnavailable ? 'Route unavailable' : 'Below the route minimum'}</span>
                   </button>
                 ) : (
                   <ActionButton label="Private bridge" onClick={() => handleIntent()} />

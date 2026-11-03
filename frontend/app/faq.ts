@@ -41,7 +41,7 @@ export const FAQ: Faq[] = [
   },
   {
     q: "Why is there a minimum amount?",
-    a: "Fees are deducted from each spend; the minimum keeps every spend meaningfully above its own fee.",
+    a: "Fees are deducted from each spend; the minimum keeps every spend meaningfully above its own fee. Private bridges can also have a temporary minimum set by the solver network on some routes; the app shows it before you start, and nothing leaves your private balance when a route refuses an amount.",
   },
   {
     q: "Who controls the contracts?",
