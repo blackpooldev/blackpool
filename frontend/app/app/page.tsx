@@ -323,14 +323,25 @@ async function returnUnusedGas(bw: ethers.Wallet, provider: ethers.Provider, cha
       fee = blk!.baseFeePerGas! * BigInt(2) + tip
       ov = { maxFeePerGas: fee, maxPriorityFeePerGas: tip }
     }
-    const bal = await provider.getBalance(bw.address)
+    let bal = await provider.getBalance(bw.address)
     let gas = BigInt(21000)
     try { gas = await provider.estimateGas({ from: bw.address, to, value: BigInt(1) }) } catch { /* plain transfer */ }
     const gasLimit = gas * BigInt(13) / BigInt(10)
-    const keep = gasLimit * fee + (chain === 'base' ? ethers.parseUnits('2000', 'gwei') : BigInt(0))
-    if (bal <= keep * BigInt(2)) return
-    const tx = await bw.sendTransaction({ to, value: bal - keep, gasLimit, ...ov })
-    await tx.wait()
+    let keep = gasLimit * fee + (chain === 'base' ? ethers.parseUnits('2000', 'gwei') : BigInt(0))
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (bal <= keep * BigInt(2)) return
+      try {
+        const tx = await bw.sendTransaction({ to, value: bal - keep, gasLimit, ...ov })
+        await tx.wait()
+        return
+      } catch (e) {
+        // the node that answered the balance can be a block behind the reshield: read again and keep more
+        if (attempt === 2 || !/insufficient funds/i.test(String((e as Error)?.message || ''))) throw e
+        await new Promise((r) => setTimeout(r, 3000))
+        bal = await provider.getBalance(bw.address)
+        keep = keep * BigInt(2)
+      }
+    }
   } catch { /* leftover stays registered; recovery can sweep it */ }
 }
 
@@ -1178,7 +1189,7 @@ export default function Home() {
       // the backend funds above the HIGHEST of them (apiServer.js:1194) and pays for the difference
       // out of the withdraw fee. RESHIELD_GAS is already a ceiling over real usage (~1.35M) and
       // maxFeePerGas is already 2x baseFee, so 20% is the third and only discretionary margin.
-      if (destPool !== 'eth') {
+      if (destPool !== CHAIN_POOLS[recoverChain].pools[0]) {
         const gasNeeded = (RESHIELD_GAS + APPROVE_GAS) * maxFeePerGas * BigInt(120) / BigInt(100)
         if ((await provider.getBalance(bState.address)) < gasNeeded) {
           setStatus('topping up gas for burner...')
@@ -1408,11 +1419,13 @@ export default function Home() {
         : await router.exactInputSingle(params, { gasLimit: SWAP_GAS_LIMIT, ...swGasOv })
       await swapTx.wait()
       // stable→native: unwrap wrapped native (WETH/WBNB) so it can reshield to the native pool
+      let unwrappedRaw = BigInt(0)
       if (!fromEth) {
         setStatus(`unwrapping to ${destSym}...`)
         const wbal = await pollErc20(provider, WETH_BASE, bState.address, BigInt(1), 60)
         const weth = new ethers.Contract(WETH_BASE, ['function withdraw(uint256)'], bw)
         const uw = await weth.withdraw(wbal); await uw.wait()
+        unwrappedRaw = wbal
       }
 
       // 4) reshield dest token → dest pool (credited to the user's private balance)
@@ -1420,7 +1433,8 @@ export default function Home() {
       setStatus('generating ZK proof...')
       const destRaw = fromEth
         ? await pollErc20(provider, USDC_BASE, bState.address, BigInt(1), 60)
-        : await pollBalance(provider, bState.address, ethers.parseEther('0.00008'), 'ETH after swap', 60)
+        // at least the unwrapped amount: a node a block behind still shows only the gas top-up
+        : await pollBalance(provider, bState.address, unwrappedRaw > BigInt(0) ? unwrappedRaw : ethers.parseEther('0.00008'), 'ETH after swap', 60)
       // Reuse the adaptive gas (swMaxFee / swGasOv) computed up front at step 1 — same 2x-baseFee cap
       // applied to the swap tx, now also sizing the reshield gas so both stay consistent on Robinhood.
       // ETH dest pays its own gas out of the reshield value. Reserve gasCost * 1.2 (20% HEADROOM),
@@ -1437,7 +1451,7 @@ export default function Home() {
       // stinginess is exactly what stranded ETH->USDG swaps (approve+deposit couldn't fund themselves).
       // Gas here is cheap (~0.0001-0.0005 ETH for the pair), so top up generously via the relayer
       // BEFORE reshielding. ETH dest reserves its gas out of reshieldRaw above, so no top-up needed.
-      if (destPool !== 'eth') {
+      if (destPool !== chainNativePool) {
         // Threshold = worst-case spend (both txs burning their FULL gasLimit at maxFee) + 20%.
         // Was 1.5x, which stacked a third safety factor on top of two that are already there: the
         // 1.6M gasLimit is a ceiling over the ~1.35M the reshield really consumes, and maxFee is

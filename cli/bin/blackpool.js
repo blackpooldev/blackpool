@@ -847,26 +847,49 @@ async function waitTokenBalance(provider, tokenAddr, addr, min, retries = 60) {
 // Poll until ETH balance >= minimum. Mirrors frontend e9().
 // After a swap's reshield: send the burner's unused gas back to the relayer that advanced it, so the burner ends
 // empty. Keeps only the cost of this transfer (+30%, plus an L1 data-fee cushion on Base). Never fails the swap.
-async function returnUnusedGas(burner, provider, chain) {
+async function returnUnusedGas(burner, provider, chain, afterBlock) {
   try {
     const cfg = await apiGet('/api/zk/config')
     const to = cfg && cfg.relayer
     if (!to || !/^0x[a-fA-F0-9]{40}$/.test(to)) return
     const fees = await burnerFees(provider, chain)
     const fee = fees.maxFeePerGas || fees.gasPrice
-    const bal = await provider.getBalance(burner.address)
+    let bal = await settledBalance(provider, burner.address, { atBlock: afterBlock, label: 'burner balance' })
     let gas = ethers.BigNumber.from(21_000)
     try { gas = await provider.estimateGas({ from: burner.address, to, value: 1 }) } catch {}
     const gasLimit = gas.mul(13).div(10)
     const l1Cushion = chain === 'base' ? ethers.utils.parseUnits('2000', 'gwei') : ethers.BigNumber.from(0) // OP-stack L1 data fee
-    const keep = gasLimit.mul(fee).add(l1Cushion)
-    if (bal.lte(keep.mul(2))) return // nothing worth moving
-    const value = bal.sub(keep)
-    await broadcastAndWait(burner, provider, { to, value, gasLimit, ...fees }, { label: 'return unused gas' })
-    info(`returned ${ethers.utils.formatEther(value)} unused gas to the relayer (burner is empty)`)
+    let keep = gasLimit.mul(fee).add(l1Cushion)
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (bal.lte(keep.mul(2))) return // nothing worth moving
+      const value = bal.sub(keep)
+      try {
+        await broadcastAndWait(burner, provider, { to, value, gasLimit, ...fees }, { label: 'return unused gas' })
+        info(`returned ${ethers.utils.formatEther(value)} unused gas to the relayer (burner is empty)`)
+        return
+      } catch (e) {
+        if (attempt === 2 || !/insufficient funds/i.test(String(e && (e.reason || e.message) || ''))) throw e
+        await new Promise(r => setTimeout(r, 3000))
+        bal = await provider.getBalance(burner.address) // the node may have been a block behind
+        keep = keep.mul(2)
+      }
+    }
   } catch (e) {
     info(`could not return the unused gas (${cleanErr(e)}); \`blackpool recover\` can sweep it later`)
   }
+}
+
+// Balance as of `atBlock` (a load-balanced RPC can answer "latest" from a node a block behind). A node without that
+// block errors, so retry; after a few tries fall back to "latest". With `min`, wait until the balance reaches it.
+async function settledBalance(provider, addr, { atBlock, min, label = 'balance' } = {}) {
+  for (let i = 0; i < 60; i++) {
+    try {
+      const b = await provider.getBalance(addr, atBlock != null && i < 12 ? atBlock : 'latest')
+      if (!min || b.gte(min)) return b
+    } catch {}
+    await new Promise(r => setTimeout(r, 2500))
+  }
+  throw new Error(`${label} never arrived on ${addr}`)
 }
 
 async function waitEthBalance(provider, addr, min, label = 'eth') {
@@ -1251,17 +1274,19 @@ async function cmdSwap(args) {
   ok('swap confirmed on Uniswap')
 
   // === Step 5: unwrap WETH -> ETH if ETH is the destination ===
+  let unwrapped = null
   if (!isEthOrigin) {
     info('unwrapping WETH -> ETH on burner...')
     const wethBal = await waitTokenBalance(provider, U.weth, burner.address, ethers.BigNumber.from(1), 60)
     const weth = new ethers.Contract(U.weth, ['function withdraw(uint256)'], burner)
     const uwPop = await weth.populateTransaction.withdraw(wethBal)
-    await broadcastAndWait(burner, provider, { ...uwPop, ...gasOv(60_000) }, { label: 'WETH unwrap' })
+    const uw = await broadcastAndWait(burner, provider, { ...uwPop, ...gasOv(60_000) }, { label: 'WETH unwrap' })
+    unwrapped = { amount: wethBal, block: uw.receipt.blockNumber }
     info('unwrap confirmed')
   }
 
   // === Step 6: figure out reshield amount + call /api/deposit/prepare ===
-  const destPool = isEthOrigin ? stablePool : 'eth'
+  const destPool = isEthOrigin ? stablePool : nativePool
   const destDec = isEthOrigin ? stableDecimals : 18
   let reshieldAmount
   if (isEthOrigin) {
@@ -1278,7 +1303,9 @@ async function cmdSwap(args) {
   } else {
     // ETH destination: the deposit tx is payable (value = amount) AND pays its own gas from the same
     // balance. Reserve the deposit gas at the live fee.
-    const full = await waitEthBalance(provider, burner.address, ethers.utils.parseEther('0.0000001'), 'swap output')
+    // Read at the unwrap's block and require at least the unwrapped amount: a node a block behind still shows only
+    // the gas top-up, and a reshield built from that would carry almost nothing.
+    const full = await settledBalance(provider, burner.address, { atBlock: unwrapped.block, min: unwrapped.amount, label: 'swap output' })
     const gasReserve = feePerGas.mul(1_600_000).mul(12).div(10) // live fee, +20%
     if (full.lte(gasReserve)) fail(`swap output ${ethers.utils.formatEther(full)} ETH too small to reshield after gas`)
     reshieldAmount = full.sub(gasReserve)
@@ -1340,7 +1367,7 @@ async function cmdSwap(args) {
     ...feeFields,
   }, { label: 'reshield' })
 
-  await returnUnusedGas(burner, provider, chain)
+  await returnUnusedGas(burner, provider, chain, rtx.receipt.blockNumber)
 
   log('')
   ok(color(`swap complete: ${amount} ${from.toUpperCase()} -> ${reshieldFmt} ${toSym} (private) on ${C.label}`, c.green))
@@ -1469,6 +1496,7 @@ async function cmdSendMax(args) {
     for (const pool of pools) {
       const P = CHAINS[chain].pools[pool]
       const tag = `${CHAINS[chain].label} ${P.symbol}`
+      let behind = 0
       for (let round = 0; round < 12; round++) {
         let bal
         try { bal = await apiPost('/api/balance', { signature: sig, pool, chain }, { timeoutMs: 120_000 }) }
@@ -1487,6 +1515,8 @@ async function cmdSendMax(args) {
           ok(`${tag}: sent ${spendStr}, recipient gets ${res.recipientReceives} ${res.symbol}  ${color(explorerTx(chain, res.txHash), c.dim)}`)
         } catch (e) {
           const m = cleanErr(e)
+          // a send or deposit a moment ago is not in the balance view yet: wait and read it again
+          if (/already spent|unknown root|stale/i.test(m) && behind++ < 4) { info(`${tag}: balance view is catching up, retrying...`); await new Promise(r => setTimeout(r, 10_000)); continue }
           if (/twice the fee/i.test(m)) { dust.push({ chain, pool, symbol: P.symbol, balance: total }); info(`${tag}: ${total} left as dust (at or below twice the fee)`) }
           else { errors.push({ chain, pool, error: m }); info(`${tag}: not sent (${m})`) }
           break

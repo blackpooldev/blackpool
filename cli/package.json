@@ -1,6 +1,6 @@
 {
   "name": "@blackpool/cli",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Private payments for onchain agents. CLI for BLACKPOOL - shield, send, swap, bridge with zero-knowledge privacy on Base, Robinhood Chain, Arbitrum, and BNB Smart Chain.",
   "mcpName": "cash.blackpool/blackpool",
   "bin": {

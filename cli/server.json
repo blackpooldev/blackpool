@@ -3,7 +3,7 @@
   "name": "cash.blackpool/blackpool",
   "title": "Blackpool",
   "description": "Private payments for agents: shield, send, swap and bridge via ZK privacy pools on 4 EVM chains.",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "websiteUrl": "https://blackpool.cash/agents",
   "repository": {
     "url": "https://github.com/blackpooldev/blackpool",
@@ -24,7 +24,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@blackpool/cli",
-      "version": "0.4.2",
+      "version": "0.4.3",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

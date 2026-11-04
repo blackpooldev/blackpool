@@ -22,6 +22,27 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "cli-0-4-3", date: "Nov 4, 2026", kind: "Improvement", areas: ["cli", "swap", "send"],
+    pill: "CLI 0.4.3: steadier swaps on Base and BNB Chain",
+    title: "CLI 0.4.3: swap fixes from a second full test run",
+    lead: "A second run of every flow with real funds on all four chains turned up three edge cases, all fixed here and in the web app.",
+    bullets: [
+      "Stablecoin to BNB swaps on BNB Chain work from the CLI (they stopped with \"unknown pool\").",
+      "Stablecoin to ETH swaps wait until the unwrapped ETH is visible before re-shielding it, so a public RPC node a block behind can no longer shrink the re-shield.",
+      "The unused gas on a one-time burner is returned reliably on Base: the balance is read at the re-shield's block and the transfer retries with a fresh balance.",
+      "send max waits and tries again when the balance view is a moment behind a send that just happened.",
+    ],
+    primary: { href: "/docs#cli", text: "CLI docs" }, docs: "/AGENTS.md",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">CLI 0.4.3<span>fixes</span></div>
+        <div className="cl-row"><span>swap max --from usdt --chain bsc</span><span className="cl-pill ok">fixed</span></div>
+        <div className="cl-row"><span>swap max --from usdc --chain base</span><span className="cl-pill ok">fixed</span></div>
+        <div className="cl-row"><span>burner after swap</span><span className="cl-pill ok">empty</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "cli-0-4-2", date: "Nov 4, 2026", kind: "Improvement", areas: ["cli", "swap", "send"],
     pill: "CLI 0.4.2: send max, cleaner swaps",
     title: "CLI 0.4.2: max amounts and swaps that leave nothing behind",
