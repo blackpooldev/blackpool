@@ -26,9 +26,7 @@ export default function Changelog() {
           <p>New features and improvements to Blackpool.</p>
         </div>
 
-        <ChangelogClient areas={AREAS} />
-
-        <div className="cl-list" data-area="all">
+        <ChangelogClient areas={AREAS} total={ENTRIES.length}>
           {ENTRIES.map((e) => (
             <article className="cl-entry" id={e.slug} key={e.slug} data-areas={e.areas.join(" ")} data-anim="">
               <div className="cl-date"><span className="mono">{e.date}</span><i className="cl-dot" /></div>
@@ -45,8 +43,7 @@ export default function Changelog() {
               </div>
             </article>
           ))}
-          <p className="cl-empty">Nothing in this area yet.</p>
-        </div>
+        </ChangelogClient>
 
         <section className="cl-cta">
           <h2>Move value privately.<br /><span>Start with one signature.</span></h2>
