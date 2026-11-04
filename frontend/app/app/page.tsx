@@ -347,6 +347,8 @@ async function returnUnusedGas(bw: ethers.Wallet, provider: ethers.Provider, cha
 
 export default function Home() {
   const [tab, setTab] = useState<Tab>('send');
+  // ?tab=send|swap|bridge opens that tab (links from the landing's Product menu)
+  useEffect(() => { const t = new URLSearchParams(window.location.search).get('tab'); if (t === 'send' || t === 'swap' || t === 'bridge') setTab(t) }, [])
   const [isUpdatingBalance, setIsUpdatingBalance] = useState(false);
   const [status, setStatus] = useState<string | null>(null);
   // Local proving progress: only annotates an operation that is already showing a status line.

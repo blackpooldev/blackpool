@@ -7,6 +7,8 @@ import Mark from "./components/Mark";
 import Icon from "./components/Icon";
 import FootMark from "./components/FootMark";
 import NewsPill from "./components/NewsPill";
+import ProductMenu from "./components/ProductMenu";
+import { PRODUCT_GROUPS } from "./components/products";
 import { HIGHLIGHTS } from "./changelog/entries";
 
 // Blackpool landing. Server component, no wallet code: the dApp lives at /app.
@@ -46,7 +48,7 @@ export default function Landing() {
         <div className="lp-wrap lp-nav-in">
           <Link href="/" className="lp-brand"><Mark className="lp-mark" size={26} />Blackpool</Link>
           <nav className="lp-links">
-            <a href="#product">Product</a><a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><a href="#faq">FAQ</a><Link href="/changelog">Changelog</Link>
+            <ProductMenu /><a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><a href="#faq">FAQ</a><Link href="/changelog">Changelog</Link>
           </nav>
           <div className="lp-nav-right">
             <Link href="/app" className="lp-btn pri">Launch app</Link>
@@ -54,7 +56,14 @@ export default function Landing() {
           </div>
         </div>
         <div className="lp-drawer">
-          <a href="#product">Product</a><a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><a href="#faq">FAQ</a><Link href="/changelog">Changelog</Link>
+          <details className="lp-dd-m"><summary>Product<svg width="12" height="12" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 3.75l3 3 3-3" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" /></svg></summary>
+            {PRODUCT_GROUPS.map((g) => (
+              <div className="lp-dd-mg" key={g.title}><div className="lp-dd-h">{g.title}</div>
+                {g.items.map((it) => <Link href={it.h} className="lp-dd-mi" key={it.t}><Icon k={it.k} c={it.c} size={15} /><span>{it.t}</span></Link>)}
+              </div>
+            ))}
+          </details>
+          <a href="#chains">Chains</a><a href="#how">How it works</a><Link href="/recover">Recover</Link><a href="/docs">Docs</a><Link href="/agents">Agents</Link><a href="#faq">FAQ</a><Link href="/changelog">Changelog</Link>
           <Link href="/app" className="lp-btn pri lg">Launch app</Link>
         </div>
       </header>

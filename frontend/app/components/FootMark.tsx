@@ -22,7 +22,8 @@ export default function FootMark() {
     const img = new Image(); img.src = "/mark.svg"; let imgReady = false; img.onload = () => { imgReady = true; build(); };
 
     const build = () => {
-      W = host.clientWidth; H = Math.max(80, Math.round(W * 0.235)); cell = W < 600 ? 4 : 6;
+      W = host.clientWidth; if (!host.isConnected || W < 2) return; // unmounted or not laid out yet
+      H = Math.max(80, Math.round(W * 0.235)); cell = W < 600 ? 4 : 6;
       canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr); canvas.style.height = `${H}px`;
       // offscreen: draw the wordmark at 1 sample per cell
       const cols = Math.ceil(W / cell), rows = Math.ceil(H / cell);
