@@ -42,7 +42,7 @@ const BYCHAIN: Array<[string, string, string, number]> = [["Robinhood Chain", "1
 export default function Landing() {
   return (
     <main className="lp">
-      <div className="lp-chains" aria-hidden="true" />
+      <div className="lp-rails" aria-hidden="true" />
       <LandingMotion />
       <header className="lp-nav">
         <div className="lp-wrap lp-nav-in">

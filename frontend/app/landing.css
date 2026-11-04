@@ -42,6 +42,11 @@
 .lp-chains { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 26px 0 34px; border-top: 1px solid var(--lp-b1); border-bottom: 1px solid var(--lp-b1); flex-wrap: wrap; }
 .lp-chain { display: flex; align-items: center; gap: 10px; color: var(--lp-fg2); font-size: 15px; font-weight: 500; transition: color .2s; }
 .lp-chain:hover { color: var(--lp-fg); }
+/* desktop (mouse): gray until hovered; touch screens keep the colors since they cannot hover */
+@media (hover: hover) and (pointer: fine) {
+  .lp-chain { color: var(--lp-dim); filter: grayscale(1); opacity: .8; transition: opacity .2s, filter .2s, color .2s; }
+  .lp-chain:hover { filter: none; opacity: 1; color: var(--lp-fg2); }
+}
 .lp-chain img { width: 22px; height: 22px; border-radius: 50%; }
 .lp-chain .soon { font-size: 11px; color: var(--lp-dim); border: 1px solid var(--lp-b2); border-radius: 999px; padding: 2px 7px; }
 
@@ -148,10 +153,10 @@
   mask-image: radial-gradient(circle, #000 1.45px, transparent 1.95px), linear-gradient(to bottom, rgba(0,0,0,.35), #000 75%);
   mask-size: 8px 8px, 100% 100%; mask-composite: intersect; }
 .lp-wordmark-mark { width: .78em; height: .78em; margin-bottom: .06em; color: var(--lp-fg); }
-.lp-chains { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.lp-chains::before, .lp-chains::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--lp-b1); }
-.lp-chains::before { left: calc(50% - 620px); } .lp-chains::after { right: calc(50% - 620px); }
-@media (max-width: 1300px) { .lp-chains::before { left: 24px; } .lp-chains::after { right: 24px; } }
+.lp-rails { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.lp-rails::before, .lp-rails::after { content: ""; position: absolute; top: 0; bottom: 0; width: 1px; background: var(--lp-b1); }
+.lp-rails::before { left: calc(50% - 620px); } .lp-rails::after { right: calc(50% - 620px); }
+@media (max-width: 1300px) { .lp-rails::before { left: 24px; } .lp-rails::after { right: 24px; } }
 
 @media (max-width: 980px) {
   .lp-hero { grid-template-columns: 1fr; gap: 20px; padding-top: 48px; }
