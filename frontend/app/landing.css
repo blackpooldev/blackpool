@@ -40,8 +40,8 @@
 
 /* chain row */
 .lp-chains { display: flex; align-items: center; justify-content: space-between; gap: 24px; padding: 26px 0 34px; border-top: 1px solid var(--lp-b1); border-bottom: 1px solid var(--lp-b1); flex-wrap: wrap; }
-.lp-chain { display: flex; align-items: center; gap: 10px; color: var(--lp-dim); font-size: 15px; font-weight: 500; filter: grayscale(1); opacity: .8; transition: opacity .2s, filter .2s; }
-.lp-chain:hover { filter: none; opacity: 1; color: var(--lp-fg2); }
+.lp-chain { display: flex; align-items: center; gap: 10px; color: var(--lp-fg2); font-size: 15px; font-weight: 500; transition: color .2s; }
+.lp-chain:hover { color: var(--lp-fg); }
 .lp-chain img { width: 22px; height: 22px; border-radius: 50%; }
 .lp-chain .soon { font-size: 11px; color: var(--lp-dim); border: 1px solid var(--lp-b2); border-radius: 999px; padding: 2px 7px; }
 
