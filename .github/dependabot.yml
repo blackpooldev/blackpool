@@ -1,0 +1,15 @@
+# Dependabot: security alerts and security-fix PRs for every npm workspace and the GitHub Actions in this repo.
+# Routine version-bump PRs are off (limit 0): this repository is published from a private monorepo, where
+# dependency updates are applied and tested before they are exported here.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories: ["/", "/cli", "/frontend", "/scripts", "/src"]
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 0
