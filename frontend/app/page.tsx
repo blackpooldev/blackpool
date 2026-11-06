@@ -19,12 +19,12 @@ export const metadata = pageMeta("/", "Blackpool — Private crypto payments tha
 // Copy is Blackpool's own; every claim below maps to a shipped feature (see TECH.md / BLACKPOOL.md).
 
 const CHAINS = [
-  { name: "Base", logo: "/token_logos/base.png" },
-  { name: "Robinhood Chain", logo: "/token_logos/robinhood.png?v=2" },
-  { name: "Arbitrum", logo: "/token_logos/arbitrum.png" },
-  { name: "BNB Chain", logo: "/token_logos/bsc.png" },
-  { name: "Solana", logo: "/token_logos/solana.png", soon: "bridge" },
-  { name: "Ethereum", logo: "/token_logos/ethereum.png", soon: "bridge" },
+  { name: "Base", logo: "/token_logos/base.png", slug: "base" },
+  { name: "Robinhood Chain", logo: "/token_logos/robinhood.png?v=2", slug: "robinhood-chain" },
+  { name: "Arbitrum", logo: "/token_logos/arbitrum.png", slug: "arbitrum" },
+  { name: "BNB Chain", logo: "/token_logos/bsc.png", slug: "bnb-chain" },
+  { name: "Solana", logo: "/token_logos/solana.png", soon: "bridge", slug: undefined },
+  { name: "Ethereum", logo: "/token_logos/ethereum.png", soon: "bridge", slug: undefined },
 ];
 
 const LINKS = [
@@ -91,7 +91,9 @@ export default function Landing() {
         <div className="lp-chains" id="chains" aria-label="Supported chains">
           <div className="lp-chains-track">
             {[...CHAINS, ...CHAINS].map((c, i) => (
-              <div className="lp-chain" key={c.name + i} aria-hidden={i >= CHAINS.length}><img src={c.logo} alt="" />{c.name}{c.soon && <span className="soon">{c.soon} only</span>}</div>
+              c.slug
+                ? <Link href={`/private-payments/${c.slug}`} className="lp-chain" key={c.name + i} aria-hidden={i >= CHAINS.length} tabIndex={i >= CHAINS.length ? -1 : undefined} title={`Private payments on ${c.name}`}><img src={c.logo} alt="" />{c.name}</Link>
+                : <div className="lp-chain" key={c.name + i} aria-hidden={i >= CHAINS.length}><img src={c.logo} alt="" />{c.name}{c.soon && <span className="soon">{c.soon} only</span>}</div>
             ))}
           </div>
         </div>
@@ -288,6 +290,7 @@ export default function Landing() {
                 <a href="https://glama.ai/mcp/servers/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer"><i />Glama<span>9 tools · verified</span></a>
                 <a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer"><i />npm<span>@blackpool/cli</span></a>
               </div>
+              <p className="lp-ag-more"><Link href="/guides/private-payments-for-ai-agents">Guide: give your agent a private wallet over MCP <span aria-hidden="true">→</span></Link></p>
             </div>
             <div className="lp-ag-term" aria-label="Example agent session">
               <div className="td"><i /><i /><i /><span>agent</span></div>

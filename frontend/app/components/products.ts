@@ -18,4 +18,12 @@ export const PRODUCT_GROUPS = [
       { k: "pulse", c: "#6E7074", t: "Status", d: "Live health of the API, the indexer and every chain.", h: "/status" },
     ],
   },
+  {
+    title: "Learn",
+    items: [
+      { k: "route", c: "#27A563", t: "Private payments by chain", d: "Pools, fees and minimums on every chain.", h: "/private-payments" },
+      { k: "docs", c: "#5B8DEF", t: "Send crypto privately", d: "Pay without exposing your wallet.", h: "/guides/send-crypto-privately" },
+      { k: "cli", c: "#E9A23B", t: "Payments for AI agents", d: "Give an agent a private wallet over MCP.", h: "/guides/private-payments-for-ai-agents" },
+    ],
+  },
 ];
