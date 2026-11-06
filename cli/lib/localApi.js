@@ -194,8 +194,8 @@ function createLocalApi({ request, loadCircuit, snarkjs, singleThread = false, o
   return {
     handles: (path) => LOCAL_PATHS.has(path),
     async handle(path, body) {
-      const h = handlers[path]
-      if (!h) throw new Error(`no local handler for ${path}`)
+      const h = LOCAL_PATHS.has(path) && Object.prototype.hasOwnProperty.call(handlers, path) ? handlers[path] : null
+      if (typeof h !== 'function') throw new Error(`no local handler for ${path}`)
       if (!body || !body.signature) throw new Error('missing signature')
       return h(body)
     },

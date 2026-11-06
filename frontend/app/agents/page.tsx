@@ -16,7 +16,9 @@ export const metadata = {
 };
 
 const RAW_URL = "https://blackpool.cash/AGENTS.md";
-const slug = (s: string) => s.toLowerCase().replace(/<[^>]+>/g, "").replace(/`/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const stripTags = (s: string) => s.replace(/<[^>]*>/g, "").replace(/[<>]/g, "");
+const slug = (s: string) => stripTags(s.toLowerCase()).replace(/`/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+const isOwnSite = (href: string) => { try { const h = new URL(href).hostname; return h === "blackpool.cash" || h.endsWith(".blackpool.cash"); } catch { return false; } };
 
 // AGENTS.md is the single source: read at build time, rendered here, served raw at /AGENTS.md.
 function load() {
@@ -29,12 +31,12 @@ function load() {
   renderer.heading = function ({ tokens, depth }) {
     const text = this.parser.parseInline(tokens);
     const id = slug(text);
-    if (depth === 2) toc.push({ id, text: text.replace(/<[^>]+>/g, "") });
+    if (depth === 2) toc.push({ id, text: stripTags(text) });
     return `<h${depth} id="${id}"><a href="#${id}">${text}</a></h${depth}>\n`;
   };
   renderer.link = function ({ href, title, tokens }) {
     const text = this.parser.parseInline(tokens);
-    const ext = /^https?:\/\//.test(href) && !href.startsWith("https://blackpool.cash");
+    const ext = /^https?:\/\//.test(href) && !isOwnSite(href);
     return `<a href="${href}"${title ? ` title="${title}"` : ""}${ext ? ' target="_blank" rel="noopener noreferrer"' : ""}>${text}</a>`;
   };
   renderer.table = function (token) {
