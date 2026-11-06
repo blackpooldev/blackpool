@@ -73,6 +73,8 @@ The CLI keeps the key you give it and the cached sign-in signature in `~/.blackp
 
 Blackpool ships a [Model Context Protocol](https://modelcontextprotocol.io) server, so AI agents in any MCP client (Cursor, VS Code, desktop chat apps and more) can shield, send, swap and bridge privately as tool calls. It is listed in the official MCP Registry as [`cash.blackpool/blackpool`](https://registry.modelcontextprotocol.io/v0.1/servers/cash.blackpool%2Fblackpool/versions/latest).
 
+[![blackpool MCP server – quality and maintenance score on Glama](https://glama.ai/mcp/servers/blackpooldev/blackpool/badges/card.svg)](https://glama.ai/mcp/servers/blackpooldev/blackpool)
+
 **Local server (stdio)**, implemented in [`cli/bin/mcp.js`](cli/bin/mcp.js). Proofs are built on the machine that runs it and the key never leaves it:
 
 ```json
