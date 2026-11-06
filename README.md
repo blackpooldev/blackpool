@@ -4,11 +4,11 @@
 
 [![build](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml)
 [![npm](https://img.shields.io/npm/v/@blackpool/cli?label=%40blackpool%2Fcli)](https://www.npmjs.com/package/@blackpool/cli)
-[![License: MIT](https://img.shields.io/badge/license-MIT-black.svg)](LICENSE)
-[![chains](https://img.shields.io/badge/live-Robinhood%20%C2%B7%20Base%20%C2%B7%20Arbitrum%20%C2%B7%20BNB-27a563.svg)](#networks)
-[![contracts](https://img.shields.io/badge/contracts-Sourcify%20exact%20match-27a563.svg)](https://sourcify.dev)
-[![app](https://img.shields.io/badge/app-blackpool.cash-111.svg)](https://blackpool.cash/app)
-[![MCP server](https://img.shields.io/badge/MCP-server-27a563.svg)](#mcp-server)
+[![License: MIT](.github/badges/license.svg)](LICENSE)
+[![chains](.github/badges/chains.svg)](#networks)
+[![contracts](.github/badges/contracts.svg)](https://sourcify.dev)
+[![app](.github/badges/app.svg)](https://blackpool.cash/app)
+[![MCP server](.github/badges/mcp.svg)](#mcp-server)
 
 Shield an asset once. Send, swap and bridge it privately after that, from a web app, a CLI or an MCP server for AI agents, with no account, no custody and no trail back to your wallet.
 
