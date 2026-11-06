@@ -22,6 +22,47 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "mcp-registry-glama", date: "Nov 6, 2026", kind: "New feature", areas: ["cli", "docs"],
+    pill: "Blackpool MCP server is listed on Glama",
+    title: "The Blackpool MCP server is listed on Glama and in the MCP Registry",
+    lead: "AI agents can find Blackpool by name in the official MCP Registry and on Glama, where both the local server and the hosted endpoint are verified listings.",
+    bullets: [
+      "Listed in the official MCP Registry as cash.blackpool/blackpool, so MCP clients and directories can find it by name.",
+      "On Glama, the local server is built and tested from the open-source repository (9 tools, verified author) and the hosted read-only endpoint at mcp.blackpool.cash/mcp has its ownership verified and is checked for health.",
+      "CLI 0.4.4 rewrites the tool descriptions for balance, assets and recover, so an agent picks the right tool and knows what each one returns.",
+      "The public repository now runs CodeQL code scanning and Dependabot security alerts on every change.",
+    ],
+    primary: { href: "/agents", text: "Agent guide" }, docs: "/AGENTS.md",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">MCP server<span>listed</span></div>
+        <div className="cl-row"><span>MCP Registry · cash.blackpool/blackpool</span><span className="cl-pill ok">listed</span></div>
+        <div className="cl-row"><span>Glama · 9 tools</span><span className="cl-pill ok">verified</span></div>
+        <div className="cl-row"><span>mcp.blackpool.cash/mcp</span><span className="cl-pill ok">healthy</span></div>
+      </div>
+    ),
+  },
+  {
+    slug: "backup-rpcs", date: "Nov 5, 2026", kind: "Improvement", areas: ["send", "swap", "bridge"],
+    pill: "Backup RPCs on every chain",
+    title: "Private operations keep working when an RPC endpoint hangs",
+    lead: "When a chain's RPC endpoint stops answering, the relayer now moves to a backup within seconds instead of failing the operation.",
+    bullets: [
+      "Every chain has backup RPC endpoints. A request with no answer after 15 seconds moves to the next one, and an endpoint that fails is skipped for a minute.",
+      "On Robinhood Chain the backups now come first, after the main endpoint stopped answering for several minutes on November 5. Nothing was spent during that time: an operation the relayer cannot check first is refused, and the funds stay in the pool.",
+      "The status page answers in about a second even when one chain is slow, and monitoring now alerts when the API is slow, not only when it is unreachable.",
+    ],
+    primary: { href: "/status", text: "Open status" },
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">Relayer RPC<span>Robinhood Chain</span></div>
+        <div className="cl-row"><span>endpoint 1 · no answer in 15 s</span><span className="cl-pill">skipped</span></div>
+        <div className="cl-row"><span>endpoint 2</span><span className="cl-pill ok">answered</span></div>
+        <div className="cl-row"><span>private send</span><span className="cl-pill ok">relayed</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "cli-0-4-3", date: "Nov 4, 2026", kind: "Improvement", areas: ["cli", "swap", "send"],
     pill: "CLI 0.4.3: steadier swaps on Base and BNB Chain",
     title: "CLI 0.4.3: swap fixes from a second full test run",

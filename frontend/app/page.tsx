@@ -274,10 +274,15 @@ export default function Landing() {
             <div className="lp-ag-copy">
               <p className="lp-ag-eyebrow">Built for agents</p>
               <h2>Your agent can pay privately too.</h2>
-              <p>The Blackpool CLI answers in JSON with stable exit codes and runs as an MCP server, and one file, AGENTS.md, tells an agent everything: setup, every command, limits, recipes, errors and the safety rules.</p>
+              <p>The Blackpool CLI answers in JSON with stable exit codes and runs as an MCP server, listed in the official MCP Registry and on Glama. One file, AGENTS.md, tells an agent everything: setup, every command, limits, recipes, errors and the safety rules.</p>
               <div className="lp-ag-cta">
                 <Link href="/agents" className="lp-btn pri">Read AGENTS.md</Link>
                 <a href="/AGENTS.md" download="AGENTS.md" className="lp-btn">Download</a>
+              </div>
+              <div className="lp-ag-listed" aria-label="Where the MCP server is listed">
+                <a href="https://registry.modelcontextprotocol.io/v0.1/servers/cash.blackpool%2Fblackpool/versions/latest" target="_blank" rel="noopener noreferrer"><i />MCP Registry<span>cash.blackpool/blackpool</span></a>
+                <a href="https://glama.ai/mcp/servers/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer"><i />Glama<span>9 tools · verified</span></a>
+                <a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer"><i />npm<span>@blackpool/cli</span></a>
               </div>
             </div>
             <div className="lp-ag-term" aria-label="Example agent session">
