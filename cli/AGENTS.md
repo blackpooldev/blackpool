@@ -333,6 +333,15 @@ Implement it with the Node or Python wrapper above. Allow-list the first argumen
 
 Blackpool speaks the [Model Context Protocol](https://modelcontextprotocol.io), so any MCP-capable agent app can call it as tools instead of running shell commands. There are two servers.
 
+Both are listed publicly, so an agent app or directory can find them by name:
+
+| Listing | Name | What is listed |
+|---|---|---|
+| [Official MCP Registry](https://registry.modelcontextprotocol.io/v0.1/servers/cash.blackpool%2Fblackpool/versions/latest) | `cash.blackpool/blackpool` | The local server (npm package) and the hosted endpoint |
+| [Glama — server](https://glama.ai/mcp/servers/blackpooldev/blackpool) | `blackpooldev/blackpool` | The local server, built and tested from the open-source repository |
+| [Glama — connector](https://glama.ai/mcp/connectors/cash.blackpool/blackpool) | `cash.blackpool/blackpool` | The hosted endpoint, ownership verified and health-checked |
+| [npm](https://www.npmjs.com/package/@blackpool/cli) | `@blackpool/cli` | The package that runs the local server |
+
 ### 9.1 Local server — payments (recommended)
 
 Runs on your machine over stdio and exposes the full CLI as tools. The wallet key stays in the local environment; tools behave exactly like the commands in §4 and return the same JSON.
