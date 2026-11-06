@@ -1,13 +1,11 @@
 import Link from "next/link";
+import { pageMeta } from "../components/seo";
 import Mark from "../components/Mark";
 import ChangelogClient from "./ChangelogClient";
 import { AREAS, ENTRIES, label } from "./entries";
 import "./changelog.css";
 
-export const metadata = {
-  title: "Changelog — Blackpool",
-  description: "New features and improvements to Blackpool.",
-};
+export const metadata = pageMeta("/changelog", "Changelog — Blackpool", "New features and improvements to Blackpool.");
 
 export default function Changelog() {
   return (

@@ -10,6 +10,10 @@ import NewsPill from "./components/NewsPill";
 import ProductMenu from "./components/ProductMenu";
 import { PRODUCT_GROUPS } from "./components/products";
 import { HIGHLIGHTS } from "./changelog/entries";
+import JsonLd, { siteGraph } from "./components/JsonLd";
+import { pageMeta } from "./components/seo";
+
+export const metadata = pageMeta("/", "Blackpool — Private crypto payments that leave no trail", "Send, swap and bridge crypto privately on Robinhood Chain, Base, Arbitrum and BNB Chain with zero-knowledge proofs. Non-custodial, and the relayer pays the gas.");
 
 // Blackpool landing. Server component, no wallet code: the dApp lives at /app.
 // Copy is Blackpool's own; every claim below maps to a shipped feature (see TECH.md / BLACKPOOL.md).
@@ -302,6 +306,7 @@ export default function Landing() {
               <details key={f.q}><summary>{f.q}</summary><p>{f.a}</p></details>
             ))}
           </div>
+          <JsonLd data={siteGraph()} />
           <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({ "@context": "https://schema.org", "@type": "FAQPage", mainEntity: FAQ.map((f) => ({ "@type": "Question", name: f.q, acceptedAnswer: { "@type": "Answer", text: f.a } })) }) }} />
         </section>
 
@@ -324,9 +329,9 @@ export default function Landing() {
               </div>
             </div>
             <div><h5>Product</h5><ul><li><Link href="/app">App</Link></li><li><a href="/docs#shield">Shield &amp; send</a></li><li><a href="/docs#swap">Swap</a></li><li><a href="/docs#bridge">Private bridge</a></li><li><Link href="/recover">Recovery</Link></li></ul></div>
-            <div><h5>Chains</h5><ul><li><a href="/docs#chain-robinhood">Robinhood Chain</a></li><li><a href="/docs#chain-base">Base</a></li><li><a href="/docs#chain-arbitrum">Arbitrum</a></li><li><a href="/docs#chain-bsc">BNB Chain</a></li><li><a href="/docs#chain-ethereum">Ethereum</a></li><li><a href="/docs#chain-solana">Solana</a></li></ul></div>
+            <div><h5>Chains</h5><ul><li><Link href="/private-payments/robinhood-chain">Robinhood Chain</Link></li><li><Link href="/private-payments/base">Base</Link></li><li><Link href="/private-payments/arbitrum">Arbitrum</Link></li><li><Link href="/private-payments/bnb-chain">BNB Chain</Link></li><li><a href="/docs#chain-ethereum">Ethereum</a></li><li><a href="/docs#chain-solana">Solana</a></li></ul></div>
             <div><h5>Developers</h5><ul><li><Link href="/docs">Docs</Link></li><li><a href="/docs#cli">CLI</a></li><li><Link href="/agents">Agents (AGENTS.md)</Link></li><li><a href="/agents#9-mcp-servers">MCP server</a></li><li><a href="/docs#api">API</a></li><li><a href="/docs#security">Security model</a></li><li><Link href="/analytics">Analytics</Link></li><li><Link href="/changelog">Changelog</Link></li></ul></div>
-            <div><h5>Resources</h5><ul><li><a href="#faq">FAQ</a></li><li><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer">npm package</a></li><li><a href="/docs#contracts">Contract addresses</a></li><li><a href="https://github.com/blackpooldev/blackpool/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security policy</a></li><li><Link href="/status">Status</Link></li><li><a href="mailto:hello@blackpool.cash">Contact</a></li></ul></div>
+            <div><h5>Resources</h5><ul><li><a href="#faq">FAQ</a></li><li><Link href="/guides/send-crypto-privately">Send crypto privately</Link></li><li><Link href="/guides/private-payments-for-ai-agents">Payments for AI agents</Link></li><li><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer">npm package</a></li><li><a href="/docs#contracts">Contract addresses</a></li><li><a href="https://github.com/blackpooldev/blackpool/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security policy</a></li><li><Link href="/status">Status</Link></li><li><a href="mailto:hello@blackpool.cash">Contact</a></li></ul></div>
           </div>
           <div className="lp-foot-bottom">
             <nav><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><a href="/docs#security">Security</a><Link href="/status">Status</Link></nav>

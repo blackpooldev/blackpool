@@ -1,10 +1,8 @@
 import Link from "next/link";
+import { pageMeta } from "../components/seo";
 import SubPage from "../components/SubPage";
 
-export const metadata = {
-  title: "Privacy — Blackpool",
-  description: "What Blackpool processes, what it stores, and what is public on-chain.",
-};
+export const metadata = pageMeta("/privacy", "Privacy — Blackpool", "What Blackpool processes, what it stores, and what is public on-chain.");
 
 export default function Privacy() {
   return (

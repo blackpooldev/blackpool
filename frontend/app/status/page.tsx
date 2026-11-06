@@ -1,10 +1,8 @@
 import SubPage from "../components/SubPage";
+import { pageMeta } from "../components/seo";
 import StatusView from "./StatusView";
 
-export const metadata = {
-  title: "Status — Blackpool",
-  description: "Live status of the Blackpool relayer API, indexer, relayer gas and chain RPCs.",
-};
+export const metadata = pageMeta("/status", "Status — Blackpool", "Live status of the Blackpool relayer API, indexer, relayer gas and chain RPCs.");
 
 export default function Status() {
   return (

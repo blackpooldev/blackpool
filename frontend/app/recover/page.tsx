@@ -59,7 +59,7 @@ export default function Recover() {
   const [wallet, setWallet] = useState<string | null>(null)
   const add = (m: string) => setLog(l => [...l, m])
   const logRef = useRef<HTMLPreElement | null>(null)
-  useEffect(() => { document.title = 'Recover — Blackpool' }, [])
+  useEffect(() => { document.title = 'Recover stuck funds — Blackpool' }, [])
   useEffect(() => {
     const nav = document.querySelector<HTMLElement>('.cl-nav'); if (!nav) return
     const on = () => { if (window.scrollY > 8) nav.setAttribute('data-scrolled', ''); else nav.removeAttribute('data-scrolled') }

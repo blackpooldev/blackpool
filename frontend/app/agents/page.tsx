@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { pageMeta } from "../components/seo";
 import path from "node:path";
 import Link from "next/link";
 import { marked } from "marked";
@@ -10,10 +11,7 @@ import "../changelog/changelog.css";
 import "../components/subpage.css";
 import "./agents.css";
 
-export const metadata = {
-  title: "Agents — Blackpool",
-  description: "AGENTS.md: everything an AI agent needs to make private payments with the Blackpool CLI — setup, commands, JSON output, limits, recipes, errors and security.",
-};
+export const metadata = pageMeta("/agents", "AGENTS.md: private crypto payments for AI agents — Blackpool", "AGENTS.md: everything an AI agent needs to make private payments with the Blackpool CLI — setup, commands, JSON output, limits, recipes, errors and security.");
 
 const RAW_URL = "https://blackpool.cash/AGENTS.md";
 // Strip tags until nothing changes (a single pass can leave e.g. "<scr<b>ipt>" behind), then drop stray brackets.

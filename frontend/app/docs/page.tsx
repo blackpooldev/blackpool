@@ -1,14 +1,12 @@
 import { FAQ } from "../faq";
+import { pageMeta } from "../components/seo";
 import Link from "next/link";
 import Mark from "../components/Mark";
 import "./docs.css";
 import CodeCopy from "../components/CodeCopy";
 import { highlight } from "../lib/highlight";
 
-export const metadata = {
-  title: "Docs — Blackpool",
-  description: "How Blackpool's zero-knowledge privacy pools work: shield, private send, swap, bridge, recovery, CLI and API.",
-};
+export const metadata = pageMeta("/docs", "Docs: how Blackpool private payments work — Blackpool", "How Blackpool's zero-knowledge privacy pools work: shield, private send, swap, bridge, recovery, CLI and API.");
 
 const NAV = [
   ["overview", "Overview"], ["concepts", "Core concepts"], ["shield", "Shield"], ["send", "Private send"],

@@ -1,12 +1,10 @@
 import Link from "next/link";
+import { pageMeta } from "../components/seo";
 import Mark from "../components/Mark";
 import AnalyticsView from "./AnalyticsView";
 import "./analytics.css";
 
-export const metadata = {
-  title: "Analytics — Blackpool",
-  description: "Public, on-chain protocol analytics for Blackpool privacy pools: shielded notes, growth per chain, pools and relayer fees.",
-};
+export const metadata = pageMeta("/analytics", "Privacy pool analytics — Blackpool", "Public, on-chain protocol analytics for Blackpool privacy pools: shielded notes, growth per chain, pools and relayer fees.");
 
 export default function Analytics() {
   return (

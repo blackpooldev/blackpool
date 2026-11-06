@@ -3,7 +3,7 @@ import "./globals.css";
 import { EvmProviders } from "./components/AppWalletProvider";
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://app.blackpool.cash"),
+  metadataBase: new URL("https://blackpool.cash"),
   title: "Blackpool — Private payments that leave no trail",
   description: "Private payments that leave no trail. Shield, send, swap and bridge across chains with zero-knowledge proofs.",
   icons: {
@@ -13,7 +13,7 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    url: "https://app.blackpool.cash",
+    url: "https://blackpool.cash",
     siteName: "Blackpool",
     title: "Blackpool — Private payments that leave no trail",
     description: "Private payments that leave no trail. Shield, send, swap and bridge across chains with zero-knowledge proofs.",

@@ -1,10 +1,8 @@
 import Link from "next/link";
+import { pageMeta } from "../components/seo";
 import SubPage from "../components/SubPage";
 
-export const metadata = {
-  title: "Terms — Blackpool",
-  description: "Terms of use for the Blackpool website, app, API and CLI.",
-};
+export const metadata = pageMeta("/terms", "Terms — Blackpool", "Terms of use for the Blackpool website, app, API and CLI.");
 
 export default function Terms() {
   return (

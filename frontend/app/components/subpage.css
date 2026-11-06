@@ -34,3 +34,7 @@
   .sp-body { padding: 40px 0 0; } .sp-foot { margin: 56px 0 0; } .sp .cl-head { padding-left: 0; padding-right: 0; }
   .st-table { display: block; overflow-x: auto; }
 }
+
+.sp-pre { margin: 0; overflow-x: auto; background: var(--s1); border: 1px solid var(--b2); border-radius: 10px; padding: 14px 16px; }
+.sp-body .sp-pre code { background: none; border: 0; padding: 0; font-size: 12.5px; line-height: 1.65; white-space: pre; color: var(--fg2); }
+@media (max-width: 560px) { .sp-body .st-table { display: block; overflow-x: auto; } }
