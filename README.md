@@ -8,8 +8,9 @@
 [![chains](https://img.shields.io/badge/live-Robinhood%20%C2%B7%20Base%20%C2%B7%20Arbitrum%20%C2%B7%20BNB-27a563.svg)](#networks)
 [![contracts](https://img.shields.io/badge/contracts-Sourcify%20exact%20match-27a563.svg)](https://sourcify.dev)
 [![app](https://img.shields.io/badge/app-blackpool.cash-111.svg)](https://blackpool.cash/app)
+[![MCP server](https://img.shields.io/badge/MCP-server-27a563.svg)](#mcp-server)
 
-Shield an asset once. Send, swap and bridge it privately after that, from a web app or a CLI, with no account, no custody and no trail back to your wallet.
+Shield an asset once. Send, swap and bridge it privately after that, from a web app, a CLI or an MCP server for AI agents, with no account, no custody and no trail back to your wallet.
 
 Blackpool is a set of zero-knowledge privacy pools on EVM chains. Every pool is a Poseidon Merkle tree of encrypted notes; spending a note means proving in zero knowledge (Groth16) that you own a leaf without saying which one. A relayer submits the transaction and pays the gas, so your wallet never appears on-chain again after the deposit.
 
@@ -67,6 +68,42 @@ blackpool recover --chain all                     # sweep anything stranded, ide
 ```
 
 The CLI keeps the key you give it and the cached sign-in signature in `~/.blackpool/` (mode 600). `BLACKPOOL_KEY` skips the interactive login for agents and CI.
+
+## MCP server
+
+Blackpool ships a [Model Context Protocol](https://modelcontextprotocol.io) server, so AI agents in any MCP client (Cursor, VS Code, desktop chat apps and more) can shield, send, swap and bridge privately as tool calls. It is listed in the official MCP Registry as [`cash.blackpool/blackpool`](https://registry.modelcontextprotocol.io/v0.1/servers/cash.blackpool%2Fblackpool/versions/latest).
+
+**Local server (stdio)**, implemented in [`cli/bin/mcp.js`](cli/bin/mcp.js). Proofs are built on the machine that runs it and the key never leaves it:
+
+```json
+{
+  "mcpServers": {
+    "blackpool": {
+      "command": "npx",
+      "args": ["-y", "@blackpool/cli@latest", "mcp"],
+      "env": { "BLACKPOOL_KEY": "0x..." }
+    }
+  }
+}
+```
+
+| Tool | What it does | |
+|---|---|---|
+| `blackpool_address` | Address of the agent wallet | read-only |
+| `blackpool_balance` | Private and public balances, per pool or every chain | read-only |
+| `blackpool_deposit` | Shield funds from the agent wallet into a private pool | writes |
+| `blackpool_send` | Pay any EVM address privately (`max` sends the whole balance) | writes |
+| `blackpool_swap` | Private same-chain swap between the native coin and the stablecoin | writes |
+| `blackpool_bridge` | Private cross-chain transfer via NEAR Intents | writes |
+| `blackpool_bridges` | Every bridge of this account with its status | read-only |
+| `blackpool_assets` | Bridge destinations and valid origins | read-only |
+| `blackpool_recover` | Sweep anything stranded on one-time burners back into the private balance | idempotent |
+
+`BLACKPOOL_MCP_TOOLS=balance,send` limits the tools, `BLACKPOOL_MCP_READONLY=1` exposes only the read-only ones. The server starts and answers `initialize` and `tools/list` without a key; tools that move funds need `BLACKPOOL_KEY`.
+
+**Hosted server (Streamable HTTP)**, read-only, no key: `https://mcp.blackpool.cash/mcp`, with `blackpool_assets`, `blackpool_bridge_quote`, `blackpool_fees`, `blackpool_analytics`, `blackpool_status` and `blackpool_guide`.
+
+Full agent guide: [AGENTS.md](AGENTS.md).
 
 ## How it works
 
