@@ -16,7 +16,8 @@ export const metadata = {
 };
 
 const RAW_URL = "https://blackpool.cash/AGENTS.md";
-const stripTags = (s: string) => s.replace(/<[^>]*>/g, "").replace(/[<>]/g, "");
+// Strip tags until nothing changes (a single pass can leave e.g. "<scr<b>ipt>" behind), then drop stray brackets.
+const stripTags = (s: string) => { let prev; do { prev = s; s = s.replace(/<[^<>]*>/g, ""); } while (s !== prev); return s.replace(/[<>]/g, ""); };
 const slug = (s: string) => stripTags(s.toLowerCase()).replace(/`/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 const isOwnSite = (href: string) => { try { const h = new URL(href).hostname; return h === "blackpool.cash" || h.endsWith(".blackpool.cash"); } catch { return false; } };
 
