@@ -31,8 +31,8 @@ const TOOLS = [
   },
   {
     name: 'blackpool_balance', title: 'Balances', readOnly: true,
-    description: 'Private (shielded) and public balances. With pool: one private pool only. wait=true polls up to 30 s while a private balance reads 0 (right after a deposit).',
-    inputSchema: { type: 'object', properties: { chain: { ...CHAIN, enum: [...CHAIN.enum, 'all'], description: 'Chain, or "all". Default base.' }, pool: POOL, wait: { type: 'boolean' } }, additionalProperties: false },
+    description: 'Read the agent wallet\'s private (shielded) and public balances. Without pool: both pools of the chain (native coin and stablecoin) with their note (UTXO) counts; chain "all" covers every chain. With pool: that one private pool only. Read-only; needs BLACKPOOL_KEY. Use wait=true right after a deposit or send, when the private balance may still read 0. Returns {balances: [{chain, address, private: {SYMBOL: {balance, utxos}}, public: {SYMBOL: balance}}]}, or with pool {chain, pool, balance, symbol, utxos}.',
+    inputSchema: { type: 'object', properties: { chain: { ...CHAIN, enum: [...CHAIN.enum, 'all'], description: 'Chain, or "all" for every chain. Default base.' }, pool: POOL, wait: { type: 'boolean', description: 'Poll up to 30 s while a private balance reads 0, e.g. right after a deposit. Default false.' } }, additionalProperties: false },
     args: (a) => ['balance', ...opt('--chain', a.chain), ...opt('--pool', a.pool), ...(a.wait ? ['--wait'] : [])],
   },
   {
@@ -67,14 +67,14 @@ const TOOLS = [
   },
   {
     name: 'blackpool_assets', title: 'Bridge assets', readOnly: true,
-    description: 'Bridge destination assets and valid origins.',
+    description: 'List what the private bridge can deliver and which private pools can fund a bridge. Returns {assets: {KEY: {chain, symbol, decimals, isNative}}, origins: [...]} where origins are pool keys such as base_eth, hood_usdg or bsc_usdt. Use an assets KEY as dest_asset and an origins entry as from in blackpool_bridge. Read-only; needs no key and no gas.',
     inputSchema: { type: 'object', properties: {}, additionalProperties: false },
     args: () => ['assets'],
   },
   {
     name: 'blackpool_recover', title: 'Recover', idempotent: true,
-    description: 'Sweep every registered burner that still holds funds back to the agent wallet (or to). Safe to run any time.',
-    inputSchema: { type: 'object', properties: { chain: { ...CHAIN, enum: [...CHAIN.enum, 'all'] }, to: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$' } }, additionalProperties: false },
+    description: 'Find the one-time burner wallets from earlier private swaps and bridges that still hold funds (for example after an interrupted swap) and sweep them to the agent wallet, or to the address in to. Idempotent and safe to run any time: empty burners are skipped and amounts too small to cover gas are reported as dust. Needs BLACKPOOL_KEY. Returns {recovered: [{chain, to, swept, dust, errors}]}.',
+    inputSchema: { type: 'object', properties: { chain: { ...CHAIN, enum: [...CHAIN.enum, 'all'], description: 'Chain to scan, or "all" for every chain. Default all.' }, to: { type: 'string', pattern: '^0x[0-9a-fA-F]{40}$', description: 'Address to sweep to. Default: the agent wallet.' } }, additionalProperties: false },
     args: (a) => ['recover', ...opt('--chain', a.chain || 'all'), ...opt('--to', a.to)],
   },
 ]
