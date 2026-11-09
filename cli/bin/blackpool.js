@@ -1040,13 +1040,30 @@ async function sweepBurner(privateKey, chain, dest) {
   log(color(`  burner ${burner.address}`, c.cyan))
   log(`    ${C.pools[C.nativePool].symbol} : ${ethers.utils.formatEther(ethB)}`)
   log(`    ${stableSym}: ${ethers.utils.formatUnits(uB, stableDecimals)}`)
-  let swept = false, error = false
+  let swept = false, error = false, needsGas = false
+  const nativeSym = C.pools[C.nativePool].symbol
+  const MIN_GAS = ethers.utils.parseEther('0.00001')
 
-  // stablecoin first (needs ETH for gas). Chain-realistic gas so the burner's small top-up isn't drained.
+  // stablecoin first (needs gas). A burner holding pool tokens qualifies for the relayer's gas top-up
+  // (/api/burner-gas only funds addresses that hold a pool token), so ask for it instead of making the
+  // user send gas by hand.
+  if (uB.gt(0) && ethB.lt(MIN_GAS)) {
+    info(`  burner has no ${nativeSym} for gas — asking the relayer for a gas top-up...`)
+    try {
+      const g = await apiPost('/api/burner-gas', { burnerAddress: burner.address, chain, txCount: 1 }, { timeoutMs: 60_000 })
+      if (g && g.success) {
+        for (let i = 0; i < 30 && ethB.lt(MIN_GAS); i++) {
+          await new Promise((res) => setTimeout(res, 2000))
+          ethB = await provider.getBalance(burner.address)
+        }
+      } else info(`  gas top-up declined: ${(g && (g.error || g.reason)) || 'no reason given'}`)
+    } catch (e) { info(`  gas top-up failed: ${(e.message || '').slice(0, 80)}`) }
+  }
   if (uB.gt(0)) {
     try {
-      if (ethB.lt(ethers.utils.parseEther('0.00001'))) {
-        info(`  burner has no ETH for gas — send it ~0.00002 ETH then re-run recover`)
+      if (ethB.lt(MIN_GAS)) {
+        needsGas = true
+        info(`  still no gas — send this burner ~0.00002 ${nativeSym}, then re-run recover`)
       } else {
         info(`  sweeping ${ethers.utils.formatUnits(uB, stableDecimals)} ${stableSym} to ${dest}...`)
         const t = new ethers.Contract(C.uni.stable, ['function transfer(address,uint256) returns (bool)'], burner)
@@ -1082,7 +1099,7 @@ async function sweepBurner(privateKey, chain, dest) {
       }
     }
   } catch (e) { info(`  ETH sweep failed: ${(e.message || '').slice(0, 80)}`); error = true }
-  return { swept, dust: false, error }
+  return { swept, dust: false, error, needsGas }
 }
 
 // Sweep registry burners for ONE chain. Shared by single-chain and --chain all.
@@ -1093,7 +1110,7 @@ async function recoverOneChain(chain, wallet, sig, dest) {
   log(color(`  sweeping to ${dest}`, c.dim))
   log('')
 
-  let swept = 0, dust = 0, errors = 0
+  let swept = 0, dust = 0, errors = 0, needsGas = 0
   const seen = new Set()
 
   // 1) Registry burners (random ephemeral, created by frontend OR this CLI). Primary path — random
@@ -1109,17 +1126,19 @@ async function recoverOneChain(chain, wallet, sig, dest) {
       if (r.swept) { swept++; await markBurnerSwept(authSig, b.address, chain) }
       if (r.dust) dust++
       if (r.error) errors++
+      if (r.needsGas) needsGas++
     }
   } catch (e) { info(`registry scan skipped: ${cleanErr(e)}`) }
 
   log('')
   if (swept > 0) ok(color(`recovered funds from ${swept} burner(s) on ${C.label}`, c.green))
-  else ok(`no stranded funds on ${C.label} — all burners clean`)
+  else if (needsGas === 0 && errors === 0) ok(`no stranded funds on ${C.label} — all burners clean`)
+  if (needsGas > 0) info(color(`${needsGas} burner(s) still hold funds but have no gas — see above, then re-run recover`, c.yellow))
   if (dust > 0) info(`(${dust} burner(s) hold only dust ETH below gas cost — not recoverable, safe to ignore)`)
   if (errors > 0) info(`${errors} burner(s) had errors — re-run recover to retry`)
   log('')
-  ;(RESULT.recovered ||= []).push({ chain, to: dest, swept, dust, errors })
-  return { swept, dust, errors }
+  ;(RESULT.recovered ||= []).push({ chain, to: dest, swept, dust, errors, needsGas })
+  return { swept, dust, errors, needsGas }
 }
 
 async function cmdRecover(args) {

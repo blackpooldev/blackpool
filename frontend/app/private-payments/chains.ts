@@ -89,7 +89,7 @@ export const CHAIN_PAGES: ChainPage[] = [
     bridgeFrom: ["bsc_bnb", "bsc_usdc", "bsc_usdt"],
     example: "blackpool send 0xRECIPIENT 10 --pool usdt --chain bsc",
     notes: [
-      "BNB Chain has three pools: BNB, USDC and USDT. Private swaps between BNB and the stablecoins run on PancakeSwap V3.",
+      "BNB Chain has three pools: BNB, USDC and USDT. Private swaps between BNB and USDT run on PancakeSwap V3; USDC can be shielded, sent and bridged.",
       "Private bridges that start or end on BNB Chain currently need at least about $1,000 per transfer. That minimum is set by the solver network on those routes and is shown before you start.",
     ],
     title: "Private payments on BNB Chain",

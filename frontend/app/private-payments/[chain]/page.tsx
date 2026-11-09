@@ -54,7 +54,7 @@ export default async function ChainLanding({ params }: { params: Promise<{ chain
         <ul>
           <li><b>Shield</b> {assets} from your wallet into a private balance. This is the only step that shows your address on-chain.</li>
           <li><b>Send privately</b> to any address on {c.short}. The recipient gets a normal transfer from the pool; nothing on-chain points back to your wallet.</li>
-          <li><b>Swap privately</b> between {c.pools[0].asset} and the stablecoin{c.pools.length > 2 ? "s" : ""} through {c.dex}, with the output going straight back into your private balance.</li>
+          <li><b>Swap privately</b> between {c.pools[0].asset} and {c.slug === "bnb-chain" ? "USDT" : c.pools[1].asset} through {c.dex}, with the output going straight back into your private balance.</li>
           <li><b>Bridge privately</b> to other chains through NEAR Intents, from the {c.bridgeFrom.map((o) => <code key={o}>{o}</code>).reduce((a, b) => <>{a}, {b}</>)} pool{c.bridgeFrom.length > 1 ? "s" : ""}.</li>
         </ul>
       </section>

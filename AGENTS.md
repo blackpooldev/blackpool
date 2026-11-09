@@ -175,9 +175,9 @@ Bridge destinations and valid origins, live from the API.
 ```
 
 ### `recover [--to ADDR] [--chain C|all]`
-Sweep every registered burner that still holds funds to the agent wallet (or `--to`). Idempotent and safe at any time. Swept funds land in the **public** wallet; `deposit` again to make them private. ~10–60 s per chain.
+Sweep every registered burner that still holds funds to the agent wallet (or `--to`). Idempotent and safe at any time. Swept funds land in the **public** wallet; `deposit` again to make them private. ~10–60 s per chain. A burner that holds tokens but no gas gets a gas top-up from the relayer first; if that is refused, the result reports it in `needsGas` instead of claiming the chain is clean.
 ```json
-{"ok":true,"command":"recover","recovered":[{"chain":"base","to":"0x…","swept":1,"dust":0,"errors":0}]}
+{"ok":true,"command":"recover","recovered":[{"chain":"base","to":"0x…","swept":1,"dust":0,"errors":0,"needsGas":0}]}
 ```
 
 ### `login`, `logout`, `version`, `latest`, `help`

@@ -22,6 +22,27 @@ export type Entry = {
 
 export const ENTRIES: Entry[] = [
   {
+    slug: "cli-0-4-5", date: "Nov 9, 2026", kind: "Improvement", areas: ["cli", "recovery", "send", "swap"],
+    pill: "CLI 0.4.5: recover tops up gas by itself",
+    title: "CLI 0.4.5 and steadier relaying on Robinhood Chain",
+    lead: "A full test of every pool on every chain, through the CLI and the MCP server, found two problems. Both are fixed.",
+    bullets: [
+      "recover asks the relayer for a gas top-up when a one-time burner holds tokens but no gas, then sweeps it. Before, it asked you to send gas by hand.",
+      "recover no longer says every burner is clean while one still holds funds; the JSON result reports those in needsGas.",
+      "The relayer signs each transaction before it broadcasts it. When a node answers with an error although the transaction already went through, the relayer now uses that transaction instead of sending the same proof again, which made a successful payment look failed on Robinhood Chain.",
+      "Tested end to end with real funds: all nine pools, private sends through the CLI and the MCP server, swaps, bridges and recovery.",
+    ],
+    primary: { href: "/docs#cli", text: "CLI docs" }, docs: "/AGENTS.md",
+    vis: (
+      <div className="cl-mock">
+        <div className="cl-mock-h">CLI 0.4.5<span>recover</span></div>
+        <div className="cl-row"><span>burner without gas</span><span className="cl-pill ok">topped up</span></div>
+        <div className="cl-row"><span>stuck USDG swept</span><span className="cl-pill ok">done</span></div>
+        <div className="cl-row"><span>duplicate relay sends</span><span className="cl-pill ok">gone</span></div>
+      </div>
+    ),
+  },
+  {
     slug: "mcp-registry-glama", date: "Nov 6, 2026", kind: "New feature", areas: ["cli", "docs"],
     pill: "Blackpool MCP server is listed on Glama",
     title: "The Blackpool MCP server is listed on Glama and in the MCP Registry",
