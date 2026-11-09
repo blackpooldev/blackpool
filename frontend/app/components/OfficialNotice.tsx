@@ -12,7 +12,7 @@ export default function OfficialNotice() {
         Our only X account is <a href={X_URL} target="_blank" rel="noopener noreferrer">@intheblackpool</a>.{" "}
         {TOKEN_LAUNCHED
           ? <>The only Blackpool token contract is the one on <a href="/token">blackpool.cash/token</a>.</>
-          : <>Blackpool has not launched a token: any token using the name is not ours.</>}
+          : <>Blackpool has not launched its token yet: any token using the name is not ours.</>}
       </span>
     </div>
   );

@@ -1,6 +1,6 @@
 # @blackpool/cli
 
-> **Official:** our only X account is [@intheblackpool](https://x.com/intheblackpool). Blackpool has not launched a token: any token using the name is not ours.
+> **Official:** our only X account is [@intheblackpool](https://x.com/intheblackpool). Blackpool has not launched its token yet: any token using the name is not ours.
 
 Private payments for onchain agents. One env var or one hidden prompt, then shield / send / swap / bridge with zero-knowledge privacy on **Base**, **Robinhood Chain**, **Arbitrum**, and **BNB Smart Chain**. Proofs are built on your machine, the same way the web app does it; the full agent guide is [AGENTS.md](https://blackpool.cash/AGENTS.md).
 

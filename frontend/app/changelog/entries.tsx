@@ -24,11 +24,11 @@ export const ENTRIES: Entry[] = [
   {
     slug: "official-channels", date: "Nov 9, 2026", kind: "Improvement", areas: ["docs", "cli"],
     pill: "Our only X account is @intheblackpool",
-    title: "Our only X account is @intheblackpool, and there is no Blackpool token",
+    title: "Our only X account is @intheblackpool, and the Blackpool token has not launched yet",
     lead: "Accounts pretending to be Blackpool have appeared. Here is what is real.",
     bullets: [
       "The only official X account is @intheblackpool. It is linked from every page of blackpool.cash, so you can always check it from here.",
-      "Blackpool has not launched a token. Any token, airdrop or claim link using the Blackpool name is not ours.",
+      "The Blackpool token has not launched yet. Until it does, any token, airdrop or claim link using the Blackpool name is not ours.",
       "Blackpool never asks for your recovery phrase or private key, and never messages you first.",
       "CLI 0.4.6 carries the new description to npm and the MCP Registry; nothing else changes.",
     ],
@@ -38,7 +38,7 @@ export const ENTRIES: Entry[] = [
         <div className="cl-mock-h">Official<span>channels</span></div>
         <div className="cl-row"><span>X</span><span className="cl-pill ok">@intheblackpool</span></div>
         <div className="cl-row"><span>website</span><span className="cl-pill ok">blackpool.cash</span></div>
-        <div className="cl-row"><span>token</span><span className="cl-pill">not launched</span></div>
+        <div className="cl-row"><span>token</span><span className="cl-pill">not launched yet</span></div>
       </div>
     ),
   },
