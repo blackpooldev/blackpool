@@ -3,7 +3,7 @@
   "name": "cash.blackpool/blackpool",
   "title": "Blackpool",
   "description": "Pay anyone. Show no one. ZK privacy pools on four chains, no custody, relayer pays the gas.",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "websiteUrl": "https://blackpool.cash/agents",
   "repository": {
     "url": "https://github.com/blackpooldev/blackpool",
@@ -24,7 +24,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@blackpool/cli",
-      "version": "0.4.6",
+      "version": "0.4.7",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

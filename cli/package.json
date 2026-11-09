@@ -1,6 +1,6 @@
 {
   "name": "@blackpool/cli",
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.",
   "mcpName": "cash.blackpool/blackpool",
   "bin": {
