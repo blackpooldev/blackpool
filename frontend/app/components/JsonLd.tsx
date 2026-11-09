@@ -36,9 +36,9 @@ export function article(path: string, headline: string, description: string, dat
 
 /** Site-wide entities for the homepage: who publishes the site, the site itself, and the app. */
 export function siteGraph() {
-  const sameAs = ["https://github.com/blackpooldev/blackpool", "https://www.npmjs.com/package/@blackpool/cli", "https://glama.ai/mcp/servers/blackpooldev/blackpool"];
+  const sameAs = ["https://x.com/intheblackpool", "https://github.com/blackpooldev/blackpool", "https://www.npmjs.com/package/@blackpool/cli", "https://glama.ai/mcp/servers/blackpooldev/blackpool"];
   return [
-    { "@context": "https://schema.org", "@type": "Organization", "@id": SITE + "/#org", name: "Blackpool", url: SITE, logo: SITE + "/apple-icon.png", email: "hello@blackpool.cash", sameAs },
+    { "@context": "https://schema.org", "@type": "Organization", "@id": SITE + "/#org", name: "Blackpool", url: SITE, logo: SITE + "/apple-icon.png", email: "hello@blackpool.cash", description: "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.", sameAs },
     { "@context": "https://schema.org", "@type": "WebSite", "@id": SITE + "/#website", name: "Blackpool", url: SITE, publisher: { "@id": SITE + "/#org" } },
     {
       "@context": "https://schema.org",
@@ -47,7 +47,7 @@ export function siteGraph() {
       url: SITE + "/app",
       applicationCategory: "FinanceApplication",
       operatingSystem: "Web",
-      description: "Non-custodial private payments with zero-knowledge proofs: shield once, then send, swap and bridge privately on Robinhood Chain, Base, Arbitrum and BNB Chain.",
+      description: "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.",
       offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
       publisher: { "@id": SITE + "/#org" },
     },

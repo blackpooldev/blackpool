@@ -9,6 +9,6 @@ export function pageMeta(path: string, title: string, description: string, type:
     description,
     alternates: { canonical: path },
     openGraph: { type, url: path, siteName: "Blackpool", title, description, images: [OG_IMAGE] },
-    twitter: { card: "summary_large_image", title, description, images: [OG_IMAGE.url] },
+    twitter: { card: "summary_large_image", site: "@intheblackpool", creator: "@intheblackpool", title, description, images: [OG_IMAGE.url] },
   };
 }

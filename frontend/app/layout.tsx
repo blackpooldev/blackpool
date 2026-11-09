@@ -5,7 +5,7 @@ import { EvmProviders } from "./components/AppWalletProvider";
 export const metadata: Metadata = {
   metadataBase: new URL("https://blackpool.cash"),
   title: "Blackpool — Private payments that leave no trail",
-  description: "Private payments that leave no trail. Shield, send, swap and bridge across chains with zero-knowledge proofs.",
+  description: "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.",
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",
@@ -16,13 +16,15 @@ export const metadata: Metadata = {
     url: "https://blackpool.cash",
     siteName: "Blackpool",
     title: "Blackpool — Private payments that leave no trail",
-    description: "Private payments that leave no trail. Shield, send, swap and bridge across chains with zero-knowledge proofs.",
+    description: "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.",
     images: [{ url: "/og.png?v=5", width: 1200, height: 630, alt: "Blackpool — Private payments that leave no trail" }],
   },
   twitter: {
     card: "summary_large_image",
+    site: "@intheblackpool",
+    creator: "@intheblackpool",
     title: "Blackpool — Private payments that leave no trail",
-    description: "Private payments that leave no trail. Shield, send, swap and bridge across chains with zero-knowledge proofs.",
+    description: "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.",
     images: ["/og.png?v=5"],
   },
 };

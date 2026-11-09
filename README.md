@@ -1,6 +1,8 @@
 # Blackpool
 
-> Private payments that leave no trail.
+> Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.
+>
+> [blackpool.cash](https://blackpool.cash) · [X @intheblackpool](https://x.com/intheblackpool)
 
 [![build](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml)
 [![npm](https://img.shields.io/npm/v/@blackpool/cli?label=%40blackpool%2Fcli)](https://www.npmjs.com/package/@blackpool/cli)

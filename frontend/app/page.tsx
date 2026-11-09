@@ -13,7 +13,7 @@ import { HIGHLIGHTS } from "./changelog/entries";
 import JsonLd, { siteGraph } from "./components/JsonLd";
 import { pageMeta } from "./components/seo";
 
-export const metadata = pageMeta("/", "Blackpool — Private crypto payments that leave no trail", "Send, swap and bridge crypto privately on Robinhood Chain, Base, Arbitrum and BNB Chain with zero-knowledge proofs. Non-custodial, and the relayer pays the gas.");
+export const metadata = pageMeta("/", "Blackpool — Private crypto payments that leave no trail", "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.");
 
 // Blackpool landing. Server component, no wallet code: the dApp lives at /app.
 // Copy is Blackpool's own; every claim below maps to a shipped feature (see TECH.md / BLACKPOOL.md).
@@ -325,7 +325,7 @@ export default function Landing() {
           <div className="lp-foot-grid" data-anim="">
             <div className="lp-foot-brand">
               <div className="lp-brand"><Mark className="lp-mark" size={26} />Blackpool</div>
-              <p className="tagline">Private payments that leave no trail</p>
+              <p className="tagline">Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.</p>
               <div className="lp-badge">
                 <span className="lp-badge-seal">ZK</span>
                 <span><b>Zero-knowledge proofs</b><br />Non-custodial by design</span>
@@ -334,11 +334,11 @@ export default function Landing() {
             <div><h5>Product</h5><ul><li><Link href="/app">App</Link></li><li><a href="/docs#shield">Shield &amp; send</a></li><li><a href="/docs#swap">Swap</a></li><li><a href="/docs#bridge">Private bridge</a></li><li><Link href="/recover">Recovery</Link></li></ul></div>
             <div><h5>Chains</h5><ul><li><Link href="/private-payments/robinhood-chain">Robinhood Chain</Link></li><li><Link href="/private-payments/base">Base</Link></li><li><Link href="/private-payments/arbitrum">Arbitrum</Link></li><li><Link href="/private-payments/bnb-chain">BNB Chain</Link></li><li><a href="/docs#chain-ethereum">Ethereum</a></li><li><a href="/docs#chain-solana">Solana</a></li></ul></div>
             <div><h5>Developers</h5><ul><li><Link href="/docs">Docs</Link></li><li><a href="/docs#cli">CLI</a></li><li><Link href="/agents">Agents (AGENTS.md)</Link></li><li><a href="/agents#9-mcp-servers">MCP server</a></li><li><a href="/docs#api">API</a></li><li><a href="/docs#security">Security model</a></li><li><Link href="/analytics">Analytics</Link></li><li><Link href="/changelog">Changelog</Link></li></ul></div>
-            <div><h5>Resources</h5><ul><li><a href="#faq">FAQ</a></li><li><Link href="/guides/send-crypto-privately">Send crypto privately</Link></li><li><Link href="/guides/private-payments-for-ai-agents">Payments for AI agents</Link></li><li><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer">npm package</a></li><li><a href="/docs#contracts">Contract addresses</a></li><li><a href="https://github.com/blackpooldev/blackpool/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security policy</a></li><li><Link href="/status">Status</Link></li><li><a href="mailto:hello@blackpool.cash">Contact</a></li></ul></div>
+            <div><h5>Resources</h5><ul><li><a href="#faq">FAQ</a></li><li><Link href="/guides/send-crypto-privately">Send crypto privately</Link></li><li><Link href="/guides/private-payments-for-ai-agents">Payments for AI agents</Link></li><li><a href="https://x.com/intheblackpool" target="_blank" rel="noopener noreferrer">X (@intheblackpool)</a></li><li><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer">GitHub</a></li><li><a href="https://www.npmjs.com/package/@blackpool/cli" target="_blank" rel="noopener noreferrer">npm package</a></li><li><a href="/docs#contracts">Contract addresses</a></li><li><a href="https://github.com/blackpooldev/blackpool/blob/main/SECURITY.md" target="_blank" rel="noopener noreferrer">Security policy</a></li><li><Link href="/status">Status</Link></li><li><a href="mailto:hello@blackpool.cash">Contact</a></li></ul></div>
           </div>
           <div className="lp-foot-bottom">
             <nav><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><a href="/docs#security">Security</a><Link href="/status">Status</Link></nav>
-            <div className="lp-social"><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer" aria-label="GitHub">GitHub</a></div>
+            <div className="lp-social"><a href="https://x.com/intheblackpool" target="_blank" rel="noopener noreferrer" aria-label="X (Twitter): @intheblackpool">X</a><a href="https://github.com/blackpooldev/blackpool" target="_blank" rel="noopener noreferrer" aria-label="GitHub">GitHub</a></div>
           </div>
           <p className="lp-copy">© {new Date().getFullYear()} Blackpool. All rights reserved.</p>
           <FootMark />

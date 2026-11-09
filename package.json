@@ -1,7 +1,7 @@
 {
   "name": "blackpool-core-evm",
   "version": "1.0.0",
-  "description": "",
+  "description": "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.",
   "main": "src/index.js",
   "directories": {
     "test": "test"

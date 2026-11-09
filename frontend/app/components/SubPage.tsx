@@ -24,7 +24,7 @@ export default function SubPage({ sub, title, lead, updated, children }: { sub: 
         <div className="sp-body">{children}</div>
         <footer className="sp-foot">
           <span>© {new Date().getFullYear()} Blackpool</span>
-          <nav><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/status">Status</Link><Link href="/docs#security">Security</Link><a href="mailto:hello@blackpool.cash">hello@blackpool.cash</a></nav>
+          <nav><Link href="/privacy">Privacy</Link><Link href="/terms">Terms</Link><Link href="/status">Status</Link><Link href="/docs#security">Security</Link><a href="https://x.com/intheblackpool" target="_blank" rel="noopener noreferrer">X</a><a href="mailto:hello@blackpool.cash">hello@blackpool.cash</a></nav>
         </footer>
       </div>
     </main>
