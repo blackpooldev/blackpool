@@ -1,5 +1,7 @@
 # @blackpool/cli
 
+> **Official:** our only X account is [@intheblackpool](https://x.com/intheblackpool). Blackpool has not launched a token: any token using the name is not ours.
+
 Private payments for onchain agents. One env var or one hidden prompt, then shield / send / swap / bridge with zero-knowledge privacy on **Base**, **Robinhood Chain**, **Arbitrum**, and **BNB Smart Chain**. Proofs are built on your machine, the same way the web app does it; the full agent guide is [AGENTS.md](https://blackpool.cash/AGENTS.md).
 
 Every command takes an optional `--chain base|robinhood|arbitrum|bsc` flag (default `base`). On Base and Arbitrum the stablecoin is USDC; on Robinhood it's USDG; on BSC the stablecoins are USDC and USDT (Binance-Peg, 18 decimals) and the native asset is BNB.

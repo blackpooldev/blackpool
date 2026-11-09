@@ -1,0 +1,5 @@
+.bp-notice { position: relative; z-index: 60; display: flex; align-items: center; justify-content: center; gap: 10px; padding: 9px 16px; background: #121316; border-bottom: 1px solid #232427; font-size: 13px; line-height: 1.45; color: #A4A5A5; text-align: center; font-family: 'Inter', -apple-system, system-ui, sans-serif; }
+.bp-notice i { flex: none; width: 7px; height: 7px; border-radius: 50%; background: #E9A23B; box-shadow: 0 0 8px rgba(233,162,59,.6); }
+.bp-notice a { color: #EBECEC; border-bottom: 1px solid #3a3b3f; }
+.bp-notice a:hover { border-bottom-color: #EBECEC; }
+@media (max-width: 560px) { .bp-notice { font-size: 12px; padding: 8px 14px; text-align: left; } }

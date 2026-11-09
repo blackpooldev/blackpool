@@ -2,8 +2,8 @@
   "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
   "name": "cash.blackpool/blackpool",
   "title": "Blackpool",
-  "description": "Private payments for agents: shield, send, swap and bridge via ZK privacy pools on 4 EVM chains.",
-  "version": "0.4.5",
+  "description": "Pay anyone. Show no one. ZK privacy pools on four chains, no custody, relayer pays the gas.",
+  "version": "0.4.6",
   "websiteUrl": "https://blackpool.cash/agents",
   "repository": {
     "url": "https://github.com/blackpooldev/blackpool",
@@ -24,7 +24,7 @@
       "registryType": "npm",
       "registryBaseUrl": "https://registry.npmjs.org",
       "identifier": "@blackpool/cli",
-      "version": "0.4.5",
+      "version": "0.4.6",
       "runtimeHint": "npx",
       "transport": {
         "type": "stdio"

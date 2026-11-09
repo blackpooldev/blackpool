@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import Mark from "./Mark";
+import OfficialNotice from "./OfficialNotice";
 import "../changelog/changelog.css";
 import "./subpage.css";
 
@@ -8,6 +9,7 @@ import "./subpage.css";
 export default function SubPage({ sub, title, lead, updated, children }: { sub: string; title: string; lead: ReactNode; updated?: string; children: ReactNode }) {
   return (
     <main className="cl sp">
+      <OfficialNotice />
       <header className="cl-nav">
         <div className="cl-nav-in">
           <Link href="/" className="cl-brand"><Mark size={24} />Blackpool<span className="cl-brand-sub">{sub}</span></Link>

@@ -4,6 +4,9 @@
 >
 > [blackpool.cash](https://blackpool.cash) · [X @intheblackpool](https://x.com/intheblackpool)
 
+> [!IMPORTANT]
+> Our only X account is [@intheblackpool](https://x.com/intheblackpool). Blackpool has not launched a token: any token using the name is not ours.
+
 [![build](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml)
 [![npm](https://img.shields.io/npm/v/@blackpool/cli?label=%40blackpool%2Fcli)](https://www.npmjs.com/package/@blackpool/cli)
 [![License: MIT](.github/badges/license.svg)](LICENSE)

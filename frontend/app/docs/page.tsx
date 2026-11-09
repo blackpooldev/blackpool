@@ -1,4 +1,5 @@
 import { FAQ } from "../faq";
+import OfficialNotice from "../components/OfficialNotice";
 import { pageMeta } from "../components/seo";
 import Link from "next/link";
 import Mark from "../components/Mark";
@@ -21,6 +22,7 @@ function Code({ children, lang = "sh" }: { children: string; lang?: string }) {
 export default function Docs() {
   return (
     <main className="dc">
+      <OfficialNotice />
       <header className="dc-nav">
         <div className="dc-nav-in">
           <Link href="/" className="dc-brand"><Mark size={24} />Blackpool<span className="dc-brand-docs">Docs</span></Link>

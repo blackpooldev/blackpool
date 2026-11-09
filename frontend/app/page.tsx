@@ -12,6 +12,7 @@ import { PRODUCT_GROUPS } from "./components/products";
 import { HIGHLIGHTS } from "./changelog/entries";
 import JsonLd, { siteGraph } from "./components/JsonLd";
 import { pageMeta } from "./components/seo";
+import OfficialNotice from "./components/OfficialNotice";
 
 export const metadata = pageMeta("/", "Blackpool — Private crypto payments that leave no trail", "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.");
 
@@ -46,6 +47,7 @@ const BYCHAIN: Array<[string, string, string, number]> = [["Robinhood Chain", "1
 export default function Landing() {
   return (
     <main className="lp">
+      <OfficialNotice />
       <div className="lp-rails" aria-hidden="true" />
       <LandingMotion />
       <header className="lp-nav">
