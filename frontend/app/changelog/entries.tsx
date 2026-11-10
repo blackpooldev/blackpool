@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { TOKEN } from "../components/token";
 
 // Areas drive the filter chips; each entry lists the areas it touches.
 export const AREAS: Array<{ key: string; label: string }> = [
@@ -20,15 +21,38 @@ export type Entry = {
   pill?: string; // short line for the rotating "New" pill on the landing (newest first)
 };
 
+// Shown only once the token is live (components/token.ts); ops/token-launch.sh fills in the details.
+const TOKEN_ENTRY: Entry[] = TOKEN.live ? [{
+  slug: "token-launch", date: TOKEN.launchDate, kind: "New feature", areas: ["docs"],
+  pill: `$${TOKEN.ticker} is live on ${TOKEN.chain}`,
+  title: `$${TOKEN.ticker} is live on ${TOKEN.chain}`,
+  lead: `The Blackpool token launched on the ${TOKEN.launchpad} launchpad. Its contract address is at the top of blackpool.cash and on blackpool.cash/token.`,
+  bullets: [
+    `Contract: ${TOKEN.address} on ${TOKEN.chain} (chain ID ${TOKEN.chainId}).`,
+    "Any other contract, airdrop or claim link is not ours.",
+    "Utility: soon.",
+    "Blackpool works the same without the token; every fee is paid in the asset you move.",
+  ],
+  primary: { href: "/token", text: "Token page" },
+  vis: (
+    <div className="cl-mock">
+      <div className="cl-mock-h">${TOKEN.ticker}<span>{TOKEN.chain}</span></div>
+      <div className="cl-row"><span>contract</span><span>{TOKEN.address.slice(0, 6)}…{TOKEN.address.slice(-4)}</span></div>
+      <div className="cl-row"><span>launchpad</span><span>{TOKEN.launchpad}</span></div>
+    </div>
+  ),
+}] : [];
+
 export const ENTRIES: Entry[] = [
+  ...TOKEN_ENTRY,
   {
     slug: "official-channels", date: "Nov 9, 2026", kind: "Improvement", areas: ["docs", "cli"],
     pill: "Our only X account is @intheblackpool",
-    title: "Our only X account is @intheblackpool, and the Blackpool token has not launched yet",
+    title: "Our only X account is @intheblackpool",
     lead: "Accounts pretending to be Blackpool have appeared. Here is what is real.",
     bullets: [
       "The only official X account is @intheblackpool. It is linked from every page of blackpool.cash, so you can always check it from here.",
-      "The Blackpool token has not launched yet. Until it does, any token, airdrop or claim link using the Blackpool name is not ours.",
+      "The Blackpool token has one contract, shown at the top of blackpool.cash and on blackpool.cash/token. Any other token, airdrop or claim link using the Blackpool name is not ours.",
       "Blackpool never asks for your recovery phrase or private key, and never messages you first.",
       "CLI 0.4.6 carries the new description to npm and the MCP Registry; nothing else changes.",
     ],
@@ -38,7 +62,7 @@ export const ENTRIES: Entry[] = [
         <div className="cl-mock-h">Official<span>channels</span></div>
         <div className="cl-row"><span>X</span><span className="cl-pill ok">@intheblackpool</span></div>
         <div className="cl-row"><span>website</span><span className="cl-pill ok">blackpool.cash</span></div>
-        <div className="cl-row"><span>token</span><span className="cl-pill">not launched yet</span></div>
+        <div className="cl-row"><span>token</span><span className="cl-pill ok">blackpool.cash/token</span></div>
       </div>
     ),
   },

@@ -3,6 +3,7 @@ import { pageMeta } from "../components/seo";
 import Mark from "../components/Mark";
 import ChangelogClient from "./ChangelogClient";
 import { AREAS, ENTRIES, label } from "./entries";
+import OfficialNotice from "../components/OfficialNotice";
 import "./changelog.css";
 
 export const metadata = pageMeta("/changelog", "Changelog — Blackpool", "New features and improvements to Blackpool.");
@@ -10,6 +11,7 @@ export const metadata = pageMeta("/changelog", "Changelog — Blackpool", "New f
 export default function Changelog() {
   return (
     <main className="cl">
+      <OfficialNotice />
       <header className="cl-nav">
         <div className="cl-nav-in">
           <Link href="/" className="cl-brand"><Mark size={24} />Blackpool<span className="cl-brand-sub">Changelog</span></Link>

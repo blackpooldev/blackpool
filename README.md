@@ -5,7 +5,7 @@
 > [blackpool.cash](https://blackpool.cash) · [X @intheblackpool](https://x.com/intheblackpool)
 
 > [!IMPORTANT]
-> Our only X account is [@intheblackpool](https://x.com/intheblackpool). Blackpool has not launched its token yet: any token using the name is not ours.
+> Our only X account is [@intheblackpool](https://x.com/intheblackpool). The only Blackpool token contract is `0xB6F2e3D5f9F1BFb0363f3aECEC26B5B9bdbeEdC1` on Robinhood Chain: [blackpool.cash/token](https://blackpool.cash/token).
 
 [![build](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml/badge.svg?branch=main)](https://github.com/blackpooldev/blackpool/actions/workflows/build.yml)
 [![npm](https://img.shields.io/npm/v/@blackpool/cli?label=%40blackpool%2Fcli)](https://www.npmjs.com/package/@blackpool/cli)

@@ -1,0 +1,8 @@
+.tk-addr { display: flex; align-items: center; gap: 10px; border: 1px solid var(--b2); background: var(--s1); border-radius: 12px; padding: 10px 10px 10px 14px; }
+.tk-addr code { flex: 1; min-width: 0; overflow-wrap: anywhere; background: none !important; border: 0 !important; padding: 0 !important; font-size: 14px; color: var(--fg); }
+.tk-addr button { flex: none; height: 32px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--b2); background: var(--s2); color: var(--fg); font-size: 13px; cursor: pointer; }
+.tk-addr button:hover { background: var(--s3, var(--s2)); }
+.tk-actions { display: flex; flex-wrap: wrap; gap: 8px; margin: 4px 0 6px; }
+.sp-body a.tk-btn { display: inline-flex; align-items: center; height: 36px; padding: 0 16px; border-radius: 999px; border: 1px solid var(--b2); background: var(--s2); color: var(--fg); font-size: 14px; }
+.sp-body a.tk-btn.pri { background: var(--fg); color: var(--bg, #0B0C0E); border-color: var(--fg); }
+.sp-body a.tk-btn:hover { border-bottom-color: var(--b2); opacity: .9; }

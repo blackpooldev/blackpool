@@ -55,6 +55,7 @@
 .cl-lead { margin: 0 0 24px; font-size: 16px; line-height: 1.55; color: var(--mut); max-width: 620px; }
 .cl-bullets { margin: 22px 0 0; padding: 0 0 0 16px; color: var(--fg2); font-size: 15px; line-height: 1.5; display: flex; flex-direction: column; gap: 10px; }
 .cl-bullets li::marker { color: var(--dim); }
+.cl-bullets li { overflow-wrap: anywhere; }
 .cl-links { display: flex; align-items: center; gap: 14px; margin-top: 26px; }
 .cl-read { font-size: 14px; font-weight: 500; color: var(--fg); display: inline-flex; gap: 6px; align-items: center; } .cl-read span { transition: transform .15s ease; } .cl-read:hover span { transform: translateX(2px); }
 .cl-docs { display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 16px; border-radius: 999px; background: var(--s3); border: 1px solid var(--b2); font-size: 13.5px; color: var(--fg); transition: transform .15s ease, border-color .15s ease; }

@@ -12,6 +12,7 @@ import { PRODUCT_GROUPS } from "./components/products";
 import { HIGHLIGHTS } from "./changelog/entries";
 import JsonLd, { siteGraph } from "./components/JsonLd";
 import { pageMeta } from "./components/seo";
+import { TOKEN } from "./components/token";
 import OfficialNotice from "./components/OfficialNotice";
 
 export const metadata = pageMeta("/", "Blackpool — Private crypto payments that leave no trail", "Pay anyone. Show no one. Zero-knowledge privacy pools on four chains, no custody, relayer pays the gas.");
@@ -76,7 +77,9 @@ export default function Landing() {
 
       <div className="lp-wrap">
         <div className="lp-pill-row">
-          <NewsPill items={HIGHLIGHTS} />
+          {TOKEN.live && TOKEN.spotlight
+            ? <Link href="/token" className="lp-pill" aria-label={`$${TOKEN.ticker} is live on ${TOKEN.chain}`}><b>${TOKEN.ticker}</b><span className="txt">Live on {TOKEN.chain}</span><span className="go">Contract</span></Link>
+            : <NewsPill items={HIGHLIGHTS} />}
         </div>
 
         <section className="lp-hero">
